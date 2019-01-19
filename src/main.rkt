@@ -17,13 +17,14 @@
   (populate-menu-bar)
   (populate-options)
 
-  (send *theme* set-face *font*)
-  (send *theme* set-delta-foreground *fg-colour*)
-  (send *theme* set-delta-background *bg-colour*)
+  (send* *theme*
+    (set-face *font*)
+    (set-delta-foreground *fg-colour*)
+    (set-delta-background *bg-colour*))
   (send page-text change-style *theme*)
-
-  (send page-canvas set-canvas-background *bg-colour*)
-  (send page-canvas set-editor page-text)
+  (send* page-canvas
+    (set-canvas-background *bg-colour*)
+    (set-editor page-text))
   (send frame show #t)
 
   (navigate *homepage*))

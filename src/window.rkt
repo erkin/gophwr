@@ -104,13 +104,15 @@
   (new text-field% (parent address-pane)
        (label "Address")
        (init-value
-        (string-append address))))
+        (string-append address))
+       (callback (lambda (activity event)
+                   (when (equal? (send event get-event-type) 'text-field-enter)
+                     (navigate-addressbar))))))
 
 (define address-button
   (new button% (parent address-pane)
        (label "Go")
-       (callback (lambda _
-                   (navigate (send address-field get-value))))))
+       (callback (lambda _ (navigate-addressbar)))))
 
 
 ;;;; Page view
@@ -171,3 +173,6 @@
   (set! dial-thread
         (thread (lambda _
                   (get-page page)))))
+
+(define (navigate-addressbar)
+  (navigate (send address-field get-value)))
