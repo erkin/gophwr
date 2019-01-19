@@ -4,6 +4,7 @@
          page-canvas page-text get-page)
 
 (require "config.rkt")
+(require "const.rkt")
 (require "gopher.rkt")
 (require "snip.rkt")
 (require net/url)
@@ -87,7 +88,7 @@
        (callback (lambda _
                    (message-box
                     (string-append "About " *project-name*)
-                    "Made by blah blah copyrite 2023" frame
+                    (string-join *version-message* "\n") frame
                     '(ok no-icon))))))
 
 
