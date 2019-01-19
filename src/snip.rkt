@@ -3,6 +3,8 @@
          entry-snip% (rename-out (entry-snip-class snip-class)))
 (require racket/snip)
 
+
+;;; Work in progress
 (define entry-snip%
   (class snip%
     (inherit set-snipclass
@@ -21,6 +23,7 @@
                          (lib "window.rkt" "entry-snip"))))))
 
 (define entry-snip-class (new entry-snip-class%))
+
 
 (define (parse-entry line)
   (define new-snip
@@ -49,6 +52,5 @@
                       " | " (caddr entry) (cadr entry) "\n"))
       (else ; todo: 7, +, T/8?
        (string-append "Unrecognised type: " type
-                      " (" (car entry) ")\n"))))
-  new-snip)
+                      " (" (car entry) ")\n")))))
 
