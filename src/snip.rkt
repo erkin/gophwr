@@ -3,6 +3,9 @@
          entry-snip% (rename-out (entry-snip-class snip-class)))
 (require racket/snip)
 
+;;; Ideally, we should convert each line read from the connection into
+;;; our custom clickable snips with separate styles by type
+
 
 ;;; Work in progress
 (define entry-snip%
@@ -31,26 +34,47 @@
   (let ((type (substring line 0 1))
         (entry (string-split (substring line 1) "\t" #:trim? #f)))
     (case type
-      (("i" "3") ; message
+      ;; Messages are displayed outright
+      (("i")
+       ;; Titles should be bold
        (if (string=? (cadr entry) "TITLE")
            (string-append "Page title: " (car entry) "\n")
            (string-append (car entry) "\n")))
-      (("0" "m" "M" "p" "x") ; text
+      ;; Errors are like messages but should be displayed in red or something
+      (("3")
+       (string-append "Error: " (car entry) "\n"))
+      ;; Text files should be rendered properly
+      (("0" "m" "M" "p" "x")
        (string-append "[txt] " (car entry) " | "
                       (caddr entry) (cadr entry) "\n"))
-      (("1") ; directory
+      ;; Directories should be clickable and navigable
+      (("1")
        (string-append "[dir] " (car entry) " | "
                       (caddr entry) (cadr entry) "\n"))
+      ;; Web pages should be handled through xdg-open
+      ;; to delegate to a web browser
       (("h") ; web
        (string-append "[web] " (car entry)
                       " -> " (cadr entry) "\n"))
-      (("g" "I") ; image
+      ;; I guess we need an image viewer.
+      (("g" "I")
        (string-append "[img] " (car entry)
                       " | " (caddr entry) (cadr entry) "\n"))
-      (("2" "4" "5" "6" "9" "c" "d" "e" "s" ";") ; binary
+      ;; Binary files shouldn't be rendered in the browser
+      ;; but downloaded directly
+      (("2" "4" "5" "6" "9" "c" "d" "e" "s" ";")
        (string-append "[bin] " (car entry)
                       " | " (caddr entry) (cadr entry) "\n"))
-      (else ; todo: 7, +, T/8?
+      ;; Input string for query
+      (("7")
+       (string-append "[input] " (car entry)
+                      " | " (caddr entry) (cadr entry) "\n"))
+      ;; Duplicate entries
+      (("+")
+       (string-append "[dup] " (car entry)
+                      " | " (caddr entry) (cadr entry) "\n"))
+      ;; todo: T/8?
+      (else
        (string-append "Unrecognised type: " type
                       " (" (car entry) ")\n")))))
 

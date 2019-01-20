@@ -59,30 +59,42 @@
        (label "&Help")))
 
 (define (populate-menu-bar)
+  ;; Open local file
+  ;; Doesn't work.
+  ;; TODO: Adjust addressbar accordingly
   (new menu-item% (parent file-menu)
        (label "&Open")
        (callback (lambda _
                    (send page-text get-file #f))))
+  ;; Navigate to the currently loaded address
   (new menu-item% (parent file-menu)
        (label "&Refresh")
        (callback (lambda _
                    (navigate address))))
+  ;; Kill the thread that's loading the page.
+  ;; Surely there's a better way to do this.
+  ;; It works but it's very buggy.
   (new menu-item% (parent file-menu)
        (label "&Stop")
        (callback (lambda _
                    (kill-thread dial-thread))))
+  ;; Save page to file
+  ;; Doesn't work right now.
   (new menu-item% (parent file-menu)
        (label "&Download")
        (callback (lambda _
                    (send page-text put-file #f #f))))
+  ;; I hope calling exit is graceful enough.
   (new menu-item% (parent file-menu)
        (label "&Quit")
        (callback (lambda _
                    (exit '()))))
+  ;; Preferences dialog doesn't have anything right now.
   (new menu-item% (parent edit-menu)
        (label "&Preferences")
        (callback (lambda _
                    (send options-dialog show #t))))
+  ;; message-box is good enough for this.
   (new menu-item% (parent help-menu)
        (label "&About")
        (callback (lambda _
@@ -103,8 +115,8 @@
 (define address-field
   (new text-field% (parent address-pane)
        (label "Address")
-       (init-value
-        (string-append address))
+       (init-value address)
+       ;; Call navigate-addressbar iff the callback event is pressing return key.
        (callback (lambda (activity event)
                    (when (equal? (send event get-event-type) 'text-field-enter)
                      (navigate-addressbar))))))
@@ -118,8 +130,10 @@
 ;;;; Page view
 (define page-canvas
   (new editor-canvas% (parent frame)
+       ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus no-hscroll auto-vscroll))
        (wheel-step *wheel-step*)
+       ;; Minimum size the canvas can be shrunk to is 16 lines.
        (line-count 16)
        (stretchable-width #t)
        (stretchable-height #t)))

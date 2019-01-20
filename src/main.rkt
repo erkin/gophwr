@@ -17,6 +17,8 @@
   (populate-menu-bar)
   (populate-options)
 
+  ;; Prepare the theme and apply it.
+  ;; Values are defined in config.rkt
   (send* *theme*
     (set-face *font*)
     (set-delta-foreground *fg-colour*)
@@ -25,6 +27,9 @@
   (send* page-canvas
     (set-canvas-background *bg-colour*)
     (set-editor page-text))
+  
+  ;; Here we go.
   (send frame show #t)
 
+  ;; Automatically navigate to homepage at startup.
   (navigate *homepage*))
