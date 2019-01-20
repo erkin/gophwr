@@ -191,6 +191,9 @@
     (else
      (send page-text insert "Error: Unsupported URL scheme")))
 
+  ;; This'll have to do until I figure out
+  ;; how to disable insertion scrolling
+  (send page-text scroll-to-position 0)
   (end-busy-cursor)
   (send frame set-status-text "")
   (send frame set-label
