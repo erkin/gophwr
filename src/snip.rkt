@@ -25,7 +25,8 @@
     (set-classname (~s '((lib "snip.rkt" "entry-snip")
                          (lib "window.rkt" "entry-snip"))))))
 
-(define entry-snip-class (new entry-snip-class%))
+(define entry-snip-class
+  (new entry-snip-class%))
 
 
 (define (parse-entry line)

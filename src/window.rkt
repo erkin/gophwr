@@ -164,19 +164,20 @@
       (cond
         ((string=? (url-scheme url) "file") ; File links have no data types.
          (string-append "/" path-string)) ; Always an absolute path.
-        ((non-empty-string? path-string) ; a Gopher link
+        ;; Take the first element of the path
+        ((non-empty-string? path-string)
          (cons (substring path-string 0 1) (substring path-string 1)))
         (else ; a Gopher home page link
          (cons "1" "/")))))
   (case (url-scheme url)
     (("gopher")
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
-       (for-each (lambda (line) ; TODO: Properly implement snips here.
-                   (send page-text insert ; Only parse gophermaps
-                         (if (string=? (car path) "1")
-                             (parse-entry line)
-                             line))) ; Insert line on its own otherwise
-                 entries)))
+       (if (string=? (car path) "1") ; Only parse gophermaps
+           (for-each (lambda (line) ; TODO: Properly implement snips here.
+                       (send page-text insert ; Insert entries line by line
+                             (parse-entry line))) entries)
+           (send page-text insert ; Insert it all at once
+                 (apply string-append entries)))))
     (("file")
      (send page-text load-file path))
     (else

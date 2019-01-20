@@ -1,5 +1,5 @@
 #lang racket
-(provide *project-name* *version-message*)
+(provide (all-defined-out))
 
 (define *project-name* "Gophwr")
 (define *project-version* "v0.0.1")
