@@ -22,7 +22,7 @@
   (class snip-class%
     (inherit set-classname)
     (super-new)
-    (set-classname (~s '((lib "snip.rkt" "entry-snip")
+    (set-classname (~s '((lib "entry.rkt" "entry-snip")
                          (lib "window.rkt" "entry-snip"))))))
 
 (define entry-snip-class

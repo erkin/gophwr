@@ -18,6 +18,15 @@
   (map displayln *version-message*)
   (exit '()))
 
+(define (initialise-window)
+  (populate-menu-bar)
+  (populate-options)
+  (prepare-theme)
+
+  ;; Here we go.
+  (send frame create-status-line)
+  (send frame show #t))
+
 
 (module+ main
   (command-line
@@ -26,13 +35,6 @@
     "Show version and licence information"
     (display-version)))
 
-  (populate-menu-bar)
-  (populate-options)
-  (prepare-theme)
-
-  ;; Here we go.
-  (send frame create-status-line)
-  (send frame show #t)
-
+  (initialise-window)
   ;; Automatically navigate to homepage at startup.
   (navigate *homepage*))

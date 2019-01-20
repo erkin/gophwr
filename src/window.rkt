@@ -1,12 +1,12 @@
 #lang racket/gui
-(provide frame navigate
+(provide frame navigate address-field
          populate-menu-bar populate-options
          page-canvas page-text get-page)
 
 (require "config.rkt")
 (require "const.rkt")
 (require "gopher.rkt")
-(require "snip.rkt")
+(require "entry.rkt")
 (require net/url)
 
 (define address *homepage*)
