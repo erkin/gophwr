@@ -4,7 +4,7 @@
 ;;;; These will be adjustable in the options menu.
 
 (define *homepage* "gopher://suika.erkin.party:70")
-(define *wheel-step* 1)
+(define *wheel-step* 2)
 
 (define *theme*
   (new style-delta%))

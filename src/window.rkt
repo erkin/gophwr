@@ -133,6 +133,7 @@
   (new editor-canvas% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus no-hscroll auto-vscroll))
+       (scrolls-per-page 3000)
        (wheel-step *wheel-step*)
        ;; Minimum size the canvas can be shrunk to is 16 lines.
        (line-count 16)
@@ -150,9 +151,6 @@
   (send frame set-status-text
         (string-append "Loading " destination))
   (begin-busy-cursor)
-  ;; Prepare the canvas
-  (send page-text select-all)
-  (send page-text clear)
   ;; Set global var (will help with back/forward and history)
   (set! address destination)
   (define url (string->url destination))
@@ -163,6 +161,7 @@
             (string-append "Loading " new-url))
       (send address-field set-value new-url)
       (set! url (string->url new-url))))
+
   ;; Concatenate path components
   (define path
     (let ((path-string (string-join (map path/param-path (url-path url)) "/")))
@@ -174,19 +173,24 @@
          (cons (substring path-string 0 1) (substring path-string 1)))
         (else ; a Gopher home page link
          (cons "1" "/")))))
+
   (case (url-scheme url)
     (("gopher")
+     ;; We have some redrawing issues here. Probably a race condition.
+     (send page-text begin-edit-sequence #f #f)
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
        (if (string=? (car path) "1") ; Only parse gophermaps
            (for-each (lambda (line) ; TODO: Properly implement snips here.
                        (send page-text insert ; Insert entries line by line
                              (parse-entry line))) entries)
            (send page-text insert ; Insert it all at once
-                 (apply string-append entries)))))
+                 (apply string-append entries))))
+     (send page-text end-edit-sequence))
     (("file")
      (send page-text load-file path))
     (else
      (send page-text insert "Error: Unsupported URL scheme")))
+
   (end-busy-cursor)
   (send frame set-status-text "")
   (send frame set-label
@@ -194,6 +198,10 @@
 
 ;;; Start the thread to fetch the page and render it
 (define (navigate page)
+  ;; Wipe the canvas before handing it to the thread
+  (send page-text select-all)
+  (send page-text clear)
+
   (set! dial-thread
         (thread (lambda _
                   (get-page page)))))
