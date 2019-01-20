@@ -1,20 +1,23 @@
 * Gophwr
-  A work-in-progress graphical Gopher browser in =racket/gui=.
+  A graphical Gopher browser in =racket/gui=.
 
-** Work in progress
-   + Clickable directory links
-     (through a custom =snip%= implementation)
-   + Save page to file
-     (a stub exists for =put-file=)
+** Status
+   This project is still under construction and is barely functional.
 
-** Wishlist
-   + Tabbed browsing
-   + Bookmarks
-   + Back/forward stacks
-   + Themes
-     + Font settings
-     + Customisable colours
-   + Binary files
-     + Download binaries
-     + Render images
-       + Inline images in gophermaps
+*** Work in progress
+    + Clickable directory links
+      (through a custom =snip%= implementation)
+    + Save page to file
+      (a stub exists for =put-file=)
+
+*** Wishlist
+    + Tabbed browsing
+    + Bookmarks
+    + Back/forward stacks
+    + Themes
+      + Font settings
+      + Customisable colours
+    + Binary files
+      + Download binaries
+      + Render images
+        + Inline images in gophermaps
