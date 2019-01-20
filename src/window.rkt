@@ -19,7 +19,8 @@
 ;;; Main window
 (define frame
   (new frame%
-       (label *project-name*)
+       (label
+        (string-append *project-name* " - " address))
        (width 1024)
        (height 768)))
 
@@ -146,6 +147,8 @@
 
 ;;; TODO: Cleanup
 (define (get-page destination)
+  (send frame set-status-text
+        (string-append "Loading " destination))
   (begin-busy-cursor)
   ;; Prepare the canvas
   (send page-text select-all)
@@ -156,6 +159,8 @@
   ;; We're assuming the absence of a scheme implies gopher for convenience.
   (unless (url-scheme url)
     (let ((new-url (string-append "gopher://" destination)))
+      (send frame set-status-text
+            (string-append "Loading " new-url))
       (send address-field set-value new-url)
       (set! url (string->url new-url))))
   ;; Concatenate path components
@@ -182,12 +187,17 @@
      (send page-text load-file path))
     (else
      (send page-text insert "Error: Unsupported URL scheme")))
-  (end-busy-cursor))
+  (end-busy-cursor)
+  (send frame set-status-text "")
+  (send frame set-label
+        (string-append *project-name* " - " address)))
 
+;;; Start the thread to fetch the page and render it
 (define (navigate page)
   (set! dial-thread
         (thread (lambda _
                   (get-page page)))))
 
+;;; Navigate to the address in the addressbar
 (define (navigate-addressbar)
   (navigate (send address-field get-value)))
