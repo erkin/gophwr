@@ -3,9 +3,21 @@
 (require "config.rkt")
 (require "window.rkt")
 
+
+(define (prepare-theme)
+  (send* *theme*
+    (set-face *font*)
+    (set-delta-foreground *fg-colour*)
+    (set-delta-background *bg-colour*))
+  (send page-text change-style *theme*)
+  (send* page-canvas
+    (set-canvas-background *bg-colour*)
+    (set-editor page-text)))
+
 (define (display-version)
   (map displayln *version-message*)
   (exit '()))
+
 
 (module+ main
   (command-line
@@ -16,19 +28,10 @@
 
   (populate-menu-bar)
   (populate-options)
+  (prepare-theme)
 
-  ;; Prepare the theme and apply it.
-  ;; Values are defined in config.rkt
-  (send* *theme*
-    (set-face *font*)
-    (set-delta-foreground *fg-colour*)
-    (set-delta-background *bg-colour*))
-  (send page-text change-style *theme*)
-  (send* page-canvas
-    (set-canvas-background *bg-colour*)
-    (set-editor page-text))
-  
   ;; Here we go.
+  (send frame create-status-line)
   (send frame show #t)
 
   ;; Automatically navigate to homepage at startup.

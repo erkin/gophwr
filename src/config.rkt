@@ -7,7 +7,7 @@
 (define *wheel-step* 1)
 
 (define *theme*
-  (make-object style-delta%))
+  (new style-delta%))
 
 (define *fg-colour*
   (make-object color% #xEE #xEE #xEE))
