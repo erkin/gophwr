@@ -113,9 +113,22 @@
        (stretchable-height #f)
        (horiz-margin 10)))
 
+;;; Stubs
+(define back-key
+  (new button% (parent address-pane)
+       (label "\u2397")))
+(define forward-key
+  (new button% (parent address-pane)
+       (label "\u2398")))
+
+(define home-key
+  (new button% (parent address-pane)
+       (label "\u2302")
+       (callback (lambda _ (navigate *homepage*)))))
+
 (define address-field
   (new text-field% (parent address-pane)
-       (label "Address")
+       (label "")
        (init-value address)
        ;; Call navigate-addressbar iff the callback event is pressing return key.
        (callback (lambda (activity event)
@@ -124,7 +137,7 @@
 
 (define address-button
   (new button% (parent address-pane)
-       (label "Go")
+       (label "\u2388") ; Helm sign
        (callback (lambda _ (navigate-addressbar)))))
 
 
@@ -149,7 +162,7 @@
 ;;; TODO: Cleanup
 (define (get-page destination)
   (send frame set-status-text
-        (string-append "Loading " destination))
+        (string-append "Loading " destination " \u231B"))
   (begin-busy-cursor)
   ;; Set global var (will help with back/forward and history)
   (set! address destination)
@@ -158,7 +171,7 @@
   (unless (url-scheme url)
     (let ((new-url (string-append "gopher://" destination)))
       (send frame set-status-text
-            (string-append "Loading " new-url))
+            (string-append "Loading " new-url " \u231B"))
       (send address-field set-value new-url)
       (set! url (string->url new-url))))
 
@@ -197,11 +210,11 @@
   (end-busy-cursor)
   (send frame set-status-text "")
   (send frame set-label
-        (string-append *project-name* " - " address)))
+        (string-append *project-name* " \u2014 " address)))
 
 ;;; Start the thread to fetch the page and render it
 (define (navigate page)
-  ;; Wipe the canvas before handing it to the thread
+  ;; Wipe the canvas before starting the thread
   (send page-text select-all)
   (send page-text clear)
 
