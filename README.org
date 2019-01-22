@@ -7,13 +7,12 @@
 
 *** Work in progress
     + Clickable directory links
-    + Save page to file
+    + Keyboard shortcuts
+    + Back/forward stacks
+    + Bookmarks
 
 *** Wishlist
     + Tabbed browsing
-    + Bookmarks
-    + Back/forward stacks
-    + Keyboard shortcuts
     + Themes
       + Font settings
       + Customisable colours
