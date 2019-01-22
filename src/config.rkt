@@ -6,6 +6,9 @@
 (define *homepage* "gopher://suika.erkin.party:70")
 (define *wheel-step* 2)
 
+(define *initial-width* 1024)
+(define *initial-height* 768)
+
 (define *theme*
   (new style-delta%))
 

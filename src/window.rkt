@@ -1,18 +1,20 @@
 #lang racket/gui
-(provide frame navigate address-field
-         populate-menu-bar populate-options
-         page-canvas page-text get-page)
+(provide populate-menu-bar populate-options
+         prepare-window frame navigate)
 
+(require framework)
+(require net/url)
 (require "config.rkt")
 (require "const.rkt")
 (require "gopher.rkt")
 (require "entry.rkt")
-(require net/url)
 
-(define address *homepage*)
+;;; The current page address
+(define address "")
+;;; Pseudostacks that hold previous and next addresses
 (define previous-address '())
 (define next-address '())
-
+;;; Thread for TCP connection (see gopher.rkt)
 (define dial-thread #f)
 
 
@@ -20,9 +22,9 @@
 (define frame
   (new frame%
        (label
-        (string-append *project-name* " - " address))
-       (width 1024)
-       (height 768)))
+        (string-append *project-name* " \u2014 " address))
+       (width *initial-width*)
+       (height *initial-height*)))
 
 
 ;;;; Dialogs
@@ -65,40 +67,39 @@
   ;; TODO: Adjust addressbar accordingly
   (new menu-item% (parent file-menu)
        (label "&Open")
-       (callback (lambda _
+       (callback (λ _
                    (send page-text get-file #f))))
   ;; Navigate to the currently loaded address
   (new menu-item% (parent file-menu)
        (label "&Refresh")
-       (callback (lambda _
+       (callback (λ _
                    (navigate address))))
   ;; Kill the thread that's loading the page.
   ;; Surely there's a better way to do this.
   ;; It works but it's very buggy.
   (new menu-item% (parent file-menu)
        (label "&Stop")
-       (callback (lambda _
+       (callback (λ _
                    (kill-thread dial-thread))))
   ;; Save page to file
   ;; Doesn't work right now.
   (new menu-item% (parent file-menu)
        (label "&Download")
-       (callback (lambda _
+       (callback (λ _
                    (send page-text put-file #f #f))))
-  ;; I hope calling exit is graceful enough.
   (new menu-item% (parent file-menu)
        (label "&Quit")
-       (callback (lambda _
-                   (exit '()))))
+       (callback (λ _
+                   (exit:exit))))
   ;; Preferences dialog doesn't have anything right now.
   (new menu-item% (parent edit-menu)
        (label "&Preferences")
-       (callback (lambda _
+       (callback (λ _
                    (send options-dialog show #t))))
   ;; message-box is good enough for this.
   (new menu-item% (parent help-menu)
        (label "&About")
-       (callback (lambda _
+       (callback (λ _
                    (message-box
                     (string-append "About " *project-name*)
                     (string-join *version-message* "\n") frame
@@ -124,21 +125,21 @@
 (define home-key
   (new button% (parent address-pane)
        (label "\u2302")
-       (callback (lambda _ (navigate *homepage*)))))
+       (callback (λ _ (navigate *homepage*)))))
 
 (define address-field
   (new text-field% (parent address-pane)
        (label "")
        (init-value address)
        ;; Call navigate-addressbar iff the callback event is pressing return key.
-       (callback (lambda (activity event)
+       (callback (λ (activity event)
                    (when (equal? (send event get-event-type) 'text-field-enter)
                      (navigate-addressbar))))))
 
 (define address-button
   (new button% (parent address-pane)
        (label "\u2388") ; Helm sign
-       (callback (lambda _ (navigate-addressbar)))))
+       (callback (λ _ (navigate-addressbar)))))
 
 
 ;;;; Page view
@@ -161,11 +162,6 @@
 
 ;;; TODO: Cleanup
 (define (get-page destination)
-  (send frame set-status-text
-        (string-append "Loading " destination " \u231B"))
-  (begin-busy-cursor)
-  ;; Set global var (will help with back/forward and history)
-  (set! address destination)
   (define url (string->url destination))
   ;; We're assuming the absence of a scheme implies gopher for convenience.
   (unless (url-scheme url)
@@ -193,9 +189,9 @@
      (send page-text begin-edit-sequence #f #f)
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
        (if (string=? (car path) "1") ; Only parse gophermaps
-           (for-each (lambda (line) ; TODO: Properly implement snips here.
+           (for-each (λ (line)
                        (send page-text insert ; Insert entries line by line
-                             (parse-entry line))) entries)
+                             (generate-entry line))) entries)
            (send page-text insert ; Insert it all at once
                  (apply string-append entries))))
      (send page-text end-edit-sequence))
@@ -207,7 +203,6 @@
   ;; This'll have to do until I figure out
   ;; how to disable insertion scrolling
   (send page-text scroll-to-position 0)
-  (end-busy-cursor)
   (send frame set-status-text "")
   (send frame set-label
         (string-append *project-name* " \u2014 " address)))
@@ -218,10 +213,32 @@
   (send page-text select-all)
   (send page-text clear)
 
+  (send address-field set-value page)
+  (send frame set-status-text
+        (string-append "Loading " page " \u231B"))
+  ;; Set global var
+  (set! address page)
+
   (set! dial-thread
-        (thread (lambda _
-                  (get-page page)))))
+        (thread (λ _
+                  (gui-utils:show-busy-cursor
+                   (λ _ (get-page page)))))))
 
 ;;; Navigate to the address in the addressbar
 (define (navigate-addressbar)
   (navigate (send address-field get-value)))
+
+;;; Set up themes and text%
+(define (prepare-window)
+  (application:current-app-name *project-name*)
+  (send* *theme*
+    (set-face *font*)
+    (set-delta-foreground *fg-colour*)
+    (set-delta-background *bg-colour*))
+  (send* page-text
+    (change-style *theme*)
+    (set-max-undo-history 0))
+  (send* page-canvas
+    (set-canvas-background *bg-colour*)
+    (set-editor page-text)))
+

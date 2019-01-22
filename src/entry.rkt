@@ -1,39 +1,15 @@
 #lang racket/gui
-(provide parse-entry
-         entry-snip% (rename-out (entry-snip-class snip-class)))
-(require racket/snip)
+(provide generate-entry)
 
-;;; Ideally, we should convert each line read from the connection into
-;;; our custom clickable snips with separate styles by type
-
-
-;;; Work in progress
-(define entry-snip%
-  (class snip%
-    (inherit set-snipclass
-             get-flags set-flags
-             get-admin)
-    (super-new)
-    (set-snipclass entry-snip-class)
-    (send (get-the-snip-class-list) add entry-snip-class)
-    (set-flags (cons 'handles-events (get-flags)))))
-
-(define entry-snip-class%
-  (class snip-class%
-    (inherit set-classname)
-    (super-new)
-    (set-classname (~s '((lib "entry.rkt" "entry-snip")
-                         (lib "window.rkt" "entry-snip"))))))
-
-(define entry-snip-class
-  (new entry-snip-class%))
+;;;; Work in progress
+;;; An "entry" is a line of a gophermap that is stylised
+;;; before being inserted into the editor.
+;;; "1" entries should be clickable.
 
 
-(define (parse-entry line)
-  (define new-snip
-    (new entry-snip%))
-  (let ((type (substring line 0 1))
-        (entry (string-split (substring line 1) "\t" #:trim? #f)))
+(define (generate-entry line)
+  (let ((entry (string-split (substring line 1) "\t" #:trim? #f))
+        (type (substring line 0 1)))
     (case type
       ;; Messages are displayed outright
       (("i")
@@ -41,7 +17,8 @@
        (if (string=? (cadr entry) "TITLE")
            (string-append "Page title: " (car entry) "\n")
            (string-append (car entry) "\n")))
-      ;; Errors are like messages but should be displayed in red or something
+      ;; Errors are like messages but should be displayed
+      ;; in red or something
       (("3")
        (string-append "Error: " (car entry) "\n"))
       ;; Text files should be rendered properly
@@ -54,7 +31,7 @@
                       (caddr entry) (cadr entry) "\n"))
       ;; Web pages should be handled through xdg-open
       ;; to delegate to a web browser
-      (("h") ; web
+      (("h")
        (string-append "[web] " (car entry)
                       " -> " (cadr entry) "\n"))
       ;; I guess we need an image viewer.
@@ -78,4 +55,3 @@
       (else
        (string-append "Unrecognised type: " type
                       " (" (car entry) ")\n")))))
-
