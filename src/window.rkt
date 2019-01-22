@@ -48,15 +48,14 @@
 
 (define (populate-menu-bar)
   ;; Open local file
-  ;; Doesn't work.
-  ;; TODO: Adjust addressbar accordingly
   (new menu-item% (parent file-menu)
        (label "&Open")
        (callback
         (λ _
           (navigate
            (url->string (path->url ; oh god why
-                         (send page-text get-file (find-system-path 'home-dir))))))))
+                         (send page-text get-file
+                               (find-system-path 'home-dir))))))))
   ;; Navigate to the currently loaded address
   (new menu-item% (parent file-menu)
        (label "&Refresh")
@@ -70,11 +69,11 @@
        (callback (λ _
                    (kill-thread dial-thread))))
   ;; Save page to file
-  ;; Doesn't work right now.
+  ;; Note that this saves the formatted version of gophermaps
   (new menu-item% (parent file-menu)
        (label "&Download")
        (callback (λ _
-                   (send page-text put-file #f #f))))
+                   (send page-text save-file "" 'text))))
   (new menu-item% (parent file-menu)
        (label "&Quit")
        (callback (λ _
@@ -173,7 +172,6 @@
 
   (case (url-scheme url)
     (("gopher")
-     ;; We have some redrawing issues here. Probably a race condition.
      (send page-text begin-edit-sequence #f #f)
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
        (case (car path)
@@ -185,11 +183,12 @@
           (send page-text insert ; Insert it all at once
                 (apply string-append entries)))
          (else
+          ;; TODO: Save binary files.
           (send page-text insert
                 "I don't know how to handle this type of data."))))
      (send page-text end-edit-sequence))
     (("file")
-     (send page-text load-file path))
+     (send page-text load-file path 'text))
     (else
      (send page-text insert "Error: Unsupported URL scheme")))
 
