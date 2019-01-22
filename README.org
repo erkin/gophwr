@@ -1,10 +1,9 @@
 * gophwr
   A graphical gopher browser in =racket/gui= using =framework=.
 
-  Patches welcome.
-
 ** Status
    This project is still under construction and is barely functional.
+   Patches welcome.
 
 *** Work in progress
     + Clickable directory links
@@ -14,6 +13,7 @@
     + Tabbed browsing
     + Bookmarks
     + Back/forward stacks
+    + Keyboard shortcuts
     + Themes
       + Font settings
       + Customisable colours

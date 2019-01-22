@@ -1,6 +1,5 @@
 #lang racket/gui
-(provide populate-menu-bar populate-options
-         prepare-window frame navigate)
+(provide initialise-window navigate)
 
 (require framework)
 (require net/url)
@@ -8,6 +7,7 @@
 (require "const.rkt")
 (require "gopher.rkt")
 (require "entry.rkt")
+
 
 ;;; The current page address
 (define address "")
@@ -25,21 +25,6 @@
         (string-append *project-name* " \u2014 " address))
        (width *initial-width*)
        (height *initial-height*)))
-
-
-;;;; Dialogs
-(define options-dialog
-  (new dialog% (parent frame)
-       (label (string-append *project-name* " Preferences"))
-       (width 640)
-       (height 480)
-       (enabled #f)))
-
-;; TODO
-(define (populate-options)
-  (new message% (parent options-dialog)
-       (label "Preferences")))
-
 
 ;;;; Menubar
 (define menu-bar
@@ -67,8 +52,11 @@
   ;; TODO: Adjust addressbar accordingly
   (new menu-item% (parent file-menu)
        (label "&Open")
-       (callback (λ _
-                   (send page-text get-file #f))))
+       (callback
+        (λ _
+          (navigate
+           (url->string (path->url ; oh god why
+                         (send page-text get-file (find-system-path 'home-dir))))))))
   ;; Navigate to the currently loaded address
   (new menu-item% (parent file-menu)
        (label "&Refresh")
@@ -95,7 +83,7 @@
   (new menu-item% (parent edit-menu)
        (label "&Preferences")
        (callback (λ _
-                   (send options-dialog show #t))))
+                   (preferences:show-dialog))))
   ;; message-box is good enough for this.
   (new menu-item% (parent help-menu)
        (label "&About")
@@ -132,14 +120,14 @@
        (label "")
        (init-value address)
        ;; Call navigate-addressbar iff the callback event is pressing return key.
-       (callback (λ (activity event)
+       (callback (λ (f event)
                    (when (equal? (send event get-event-type) 'text-field-enter)
-                     (navigate-addressbar))))))
+                     (navigate (send f get-value)))))))
 
 (define address-button
   (new button% (parent address-pane)
        (label "\u2388") ; Helm sign
-       (callback (λ _ (navigate-addressbar)))))
+       (callback (λ _ (navigate (send address-field get-value))))))
 
 
 ;;;; Page view
@@ -155,7 +143,7 @@
        (stretchable-height #t)))
 
 (define page-text
-  (new text%
+  (new text:basic%
        (line-spacing 0.6)
        (auto-wrap #f)))
 
@@ -188,12 +176,17 @@
      ;; We have some redrawing issues here. Probably a race condition.
      (send page-text begin-edit-sequence #f #f)
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
-       (if (string=? (car path) "1") ; Only parse gophermaps
-           (for-each (λ (line)
-                       (send page-text insert ; Insert entries line by line
-                             (generate-entry line))) entries)
-           (send page-text insert ; Insert it all at once
-                 (apply string-append entries))))
+       (case (car path)
+         (("1")
+          (for-each (λ (line)
+                      (send page-text insert ; Insert entries line by line
+                            (generate-entry line))) entries)) ; Only parse gophermaps
+         (("0" "m" "M" "p" "x")
+          (send page-text insert ; Insert it all at once
+                (apply string-append entries)))
+         (else
+          (send page-text insert
+                "I don't know how to handle this type of data."))))
      (send page-text end-edit-sequence))
     (("file")
      (send page-text load-file path))
@@ -224,13 +217,11 @@
                   (gui-utils:show-busy-cursor
                    (λ _ (get-page page)))))))
 
-;;; Navigate to the address in the addressbar
-(define (navigate-addressbar)
-  (navigate (send address-field get-value)))
-
-;;; Set up themes and text%
-(define (prepare-window)
+;;; GUI portion starts here.
+(define (initialise-window)
   (application:current-app-name *project-name*)
+  (populate-menu-bar)
+
   (send* *theme*
     (set-face *font*)
     (set-delta-foreground *fg-colour*)
@@ -240,5 +231,9 @@
     (set-max-undo-history 0))
   (send* page-canvas
     (set-canvas-background *bg-colour*)
-    (set-editor page-text)))
+    (set-editor page-text))
+
+  ;; Here we go!
+  (send frame create-status-line)
+  (send frame show #t))
 

@@ -1,22 +1,11 @@
-#lang racket/gui
+#lang racket
 (require "const.rkt")
 (require "config.rkt")
 (require "window.rkt")
 
-
 (define (display-version)
   (map displayln *version-message*)
   (exit '()))
-
-(define (initialise-window)
-  (prepare-window)
-  (populate-menu-bar)
-  (populate-options)
-
-  ;; Here we go!
-  (send frame create-status-line)
-  (send frame show #t))
-
 
 (module+ main
   (command-line
