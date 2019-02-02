@@ -101,7 +101,9 @@
        (stretchable-height #f)
        (horiz-margin 10)))
 
-;;; Stubs
+
+;;;; Keys
+;;; Stubs for now
 (define back-key
   (new button% (parent address-pane)
        (label "\u2397")))
@@ -131,7 +133,7 @@
 
 ;;;; Page view
 (define page-canvas
-  (new editor-canvas% (parent frame)
+  (new canvas:basic% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus no-hscroll auto-vscroll))
        (scrolls-per-page 3000)
@@ -147,7 +149,30 @@
        (auto-wrap #f)))
 
 
+;;; GUI starts here.
+(define (initialise-window)
+  (application:current-app-name *project-name*)
+  (populate-menu-bar)
+
+  (send* *theme*
+    (set-face *font*)
+    (set-delta-foreground *fg-colour*)
+    (set-delta-background *bg-colour*))
+  (send* page-text
+    (change-style *theme*)
+    (set-max-undo-history 0))
+  (send* page-canvas
+    (set-canvas-background *bg-colour*)
+    (set-editor page-text))
+
+  ;; Here we go!
+  (send frame create-status-line)
+  (send frame show #t))
+
+
 ;;; TODO: Cleanup
+;;; Fetches the page from gopher or file URLs and renders it.
+;;; Must be called in a thread. See navigate below.
 (define (get-page destination)
   (define url (string->url destination))
   ;; We're assuming the absence of a scheme implies gopher for convenience.
@@ -199,6 +224,7 @@
   (send frame set-label
         (string-append *project-name* " \u2014 " address)))
 
+
 ;;; Start the thread to fetch the page and render it
 (define (navigate page)
   ;; Wipe the canvas before starting the thread
@@ -215,24 +241,3 @@
         (thread (λ _
                   (gui-utils:show-busy-cursor
                    (λ _ (get-page page)))))))
-
-;;; GUI portion starts here.
-(define (initialise-window)
-  (application:current-app-name *project-name*)
-  (populate-menu-bar)
-
-  (send* *theme*
-    (set-face *font*)
-    (set-delta-foreground *fg-colour*)
-    (set-delta-background *bg-colour*))
-  (send* page-text
-    (change-style *theme*)
-    (set-max-undo-history 0))
-  (send* page-canvas
-    (set-canvas-background *bg-colour*)
-    (set-editor page-text))
-
-  ;; Here we go!
-  (send frame create-status-line)
-  (send frame show #t))
-
