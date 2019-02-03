@@ -19,4 +19,3 @@
       + Download binaries
       + Render images
         + Inline images in gophermaps
-    + Gopher+ support
