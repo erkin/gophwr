@@ -2,7 +2,7 @@
 (provide (all-defined-out))
 
 (define *project-name* "Gophwr")
-(define *project-version* "v0.0.1")
+(define *project-version* "v0.1.0")
 
 (define *version-message*
   (list

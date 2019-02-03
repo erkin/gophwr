@@ -3,7 +3,7 @@
 
 ;;;; These will be adjustable in the options menu.
 
-(define *homepage* "gopher://suika.erkin.party:70")
+(define *homepage* "gopher://suika.erkin.party:70/1/gophwr")
 (define *wheel-step* 2)
 
 (define *initial-width* 1024)
