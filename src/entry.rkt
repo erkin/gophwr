@@ -6,56 +6,59 @@
 ;;; before being inserted into the editor.
 ;;; "1" entries should be clickable.
 
-;;; TODO: Gopher+ support
+;;; Temporarily handled as ordinary strings
 
 (define (generate-entry line)
-  (let ((entry (string-split (substring line 1) "\t" #:trim? #f))
-        (type (substring line 0 1)))
+  ;; Strings must be untrimmed to accommodate for blank i lines.
+  (let* ((entry (string-split (substring line 1) "\t" #:trim? #f))
+         (type (substring line 0 1))
+         (text (car entry))
+         (location ; address : port location
+          (string-append ; Port string might contain a leftover newline.
+           (caddr entry) ":" (string-trim (cadddr entry)) (cadr entry))))
     (case type
       ;; Messages are displayed outright.
       (("i")
        ;; Titles should be bold.
        (if (string=? (cadr entry) "TITLE")
-           (string-append "Page title: " (car entry) "\n")
-           (string-append (car entry) "\n")))
+           (string-append "Page title: " text "\n")
+           (string-append text "\n")))
       ;; Errors are like messages but should be displayed
       ;; in red or something.
       (("3")
-       (string-append "Error: " (car entry) "\n"))
+       (string-append "Error: " text "\n"))
       ;; Text files should be rendered properly.
-      (("0" "m" "M" "p" "x")
-       (string-append "[txt] " (car entry) " | "
-                      (caddr entry) (cadr entry) "\n"))
+      (("0")
+       (string-append "[txt] " text " | " location "\n"))
       ;; Directories should be clickable and navigable.
       (("1")
-       (string-append "[dir] " (car entry) " | "
-                      (caddr entry) (cadr entry) "\n"))
+       (string-append "[dir] " text " | "
+                      location "\n"))
       ;; Web pages should be handled through xdg-open
       ;; to delegate to a web browser.
       (("h")
-       (string-append "[web] " (car entry)
-                      " -> " (cadr entry) "\n"))
+       (if (string=? "URL:" (substring (cadr entry) 0 4))
+           (string-append "[web] " text " -> "
+                          (substring (cadr entry) 4) "\n")
+           (string-append "[html] " text " | " location "\n")))
       ;; I guess we need an image viewer.
       (("g" "I")
-       (string-append "[img] " (car entry)
-                      " | " (caddr entry) (cadr entry) "\n"))
+       (string-append "[img] " text " | " location "\n"))
       ;; Binary files shouldn't be rendered in the browser
       ;; but downloaded directly.
-      (("2" "4" "5" "6" "9" "c" "d" "e" "s" ";")
-       (string-append "[bin] " (car entry)
-                      " | " (caddr entry) (cadr entry) "\n"))
+      (("4" "5" "6" "9" "c" "d" "e" "s" ";")
+       (string-append "[bin] " text " | " location "\n"))
       ;; Input string for query.
       (("7")
-       (string-append "[input] " (car entry)
-                      " | " (caddr entry) (cadr entry) "\n"))
+       (string-append "[input] " text " | " location "\n"))
       ;; Duplicate entries.
       (("+")
-       (string-append "[dup] " (car entry)
-                      " | " (caddr entry) (cadr entry) "\n"))
+       (string-append "[dup] " text " | " location "\n"))
       ;; I honestly have no idea how to handle telnet entries.
-      (("t" "8")
-       (string-append "[telnet] " (car entry)
-                      " | " (caddr entry) (cadr entry) "\n"))
+      (("T" "8")
+       (string-append "[telnet] " text " | " location "\n"))
+      ;; Nor CSO phonebook entries.
+      (("2")
+       (string-append "[pbx] " text " | " location "\n"))
       (else
-       (string-append "Unrecognised type: " type
-                      " (" (car entry) ")\n")))))
+       (string-append "Unrecognised type: " type " (" text ")\n")))))
