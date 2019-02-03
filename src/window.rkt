@@ -69,7 +69,7 @@
        (callback (λ _
                    (kill-thread dial-thread))))
   ;; Save page to file
-  ;; Note that this saves the formatted version of gophermaps
+  ;; Note that this saves the formatted version of menus
   (new menu-item% (parent file-menu)
        (label "&Download")
        (callback (λ _

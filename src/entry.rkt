@@ -2,9 +2,8 @@
 (provide generate-entry)
 
 ;;;; Work in progress
-;;; An "entry" is a selector within a gophermap that is stylised
-;;; before being inserted into the editor.
-;;; "1" entries should be clickable.
+;;; An "entry" is a selector within a menu that is stylised before being
+;;; inserted into the editor.
 
 ;;; Temporarily handled as ordinary strings
 

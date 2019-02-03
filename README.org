@@ -18,4 +18,4 @@
     + Binary files
       + Download binaries
       + Render images
-        + Inline images in gophermaps
+        + Inline images in menus

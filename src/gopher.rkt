@@ -9,7 +9,7 @@
 (define (write-line str out)
   (display (string-append str crlf) out))
 
-;;; Read the gophermap line by line until we come across ".\r\n"
+;;; Read the menu line by line until we come across ".\r\n"
 ;;; or EOF, since not every server is compliant.
 (define (read-loop in lines)
   (define line (read-line in 'return-linefeed))
