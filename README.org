@@ -8,7 +8,6 @@
 *** Work in progress
     + Clickable directory links
     + Keyboard shortcuts
-    + Back/forward stacks
     + Bookmarks
 
 *** Wishlist
@@ -20,3 +19,4 @@
       + Download binaries
       + Render images
         + Inline images in gophermaps
+    + Gopher+ support

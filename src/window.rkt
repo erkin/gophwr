@@ -106,10 +106,12 @@
 ;;; Stubs for now
 (define back-key
   (new button% (parent address-pane)
-       (label "\u2397")))
+       (label "\u2397")
+       (callback (λ _ (go-back)))))
 (define forward-key
   (new button% (parent address-pane)
-       (label "\u2398")))
+       (label "\u2398")
+       (callback (λ _ (go-forward)))))
 
 (define home-key
   (new button% (parent address-pane)
@@ -173,16 +175,7 @@
 ;;; TODO: Cleanup
 ;;; Fetches the page from gopher or file URLs and renders it.
 ;;; Must be called in a thread. See navigate below.
-(define (get-page destination)
-  (define url (string->url destination))
-  ;; We're assuming the absence of a scheme implies gopher for convenience.
-  (unless (url-scheme url)
-    (let ((new-url (string-append "gopher://" destination)))
-      (send frame set-status-text
-            (string-append "Loading " new-url " \u231B"))
-      (send address-field set-value new-url)
-      (set! url (string->url new-url))))
-
+(define (get-page url)
   ;; Concatenate path components
   (define path
     (let ((path-string (string-join (map path/param-path (url-path url)) "/")))
@@ -226,18 +219,39 @@
 
 
 ;;; Start the thread to fetch the page and render it
-(define (navigate page)
-  ;; Wipe the canvas before starting the thread
+(define (navigate uri)
+  ;; Wipe the canvas
   (send page-text select-all)
   (send page-text clear)
 
-  (send address-field set-value page)
+  ;; We're assuming the absence of a scheme implies gopher for convenience.
+  (define url
+    (if (url-scheme (string->url uri))
+        uri
+        (string-append "gopher://" uri)))
+
+  (unless (string=? address url)
+    (when (non-empty-string? address)
+     (set! previous-address (cons address previous-address)))
+    (set! address url))
+
   (send frame set-status-text
-        (string-append "Loading " page " \u231B"))
-  ;; Set global var
-  (set! address page)
+        (string-append "Loading " url " \u231B")) ; hourglass
+  (send address-field set-value url)
 
   (set! dial-thread
         (thread (λ _
                   (gui-utils:show-busy-cursor
-                   (λ _ (get-page page)))))))
+                   (λ _
+                     (get-page (string->url url))))))))
+
+(define (go-back)
+  (unless (null? previous-address)
+    (set! next-address (cons address next-address))
+    (navigate (car previous-address))
+    (set! previous-address (cdr previous-address))))
+
+(define (go-forward)
+  (unless (null? next-address)
+    (navigate (car next-address))
+    (set! next-address (cdr next-address))))
