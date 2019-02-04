@@ -193,13 +193,19 @@
      (send page-text begin-edit-sequence #f #f)
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
        (case (car path)
+         ;;; MENU
          (("1")
+          ;; Insert entries line by line.
           (for-each (λ (line)
-                      (send page-text insert ; Insert entries line by line
-                            (generate-entry line))) entries)) ; Only parse gophermaps
+                      (send page-text insert
+                            ;; Parse each line and return entries.
+                            (generate-entry line))) entries))
+         ;;; TEXT
          (("0" "m" "M" "p" "x")
-          (send page-text insert ; Insert it all at once
+          ;; Insert the text all at once.
+          (send page-text insert
                 (apply string-append entries)))
+         ;;; other?
          (else
           ;; TODO: Save binary files.
           (send page-text insert
@@ -211,7 +217,7 @@
      (send page-text insert "Error: Unsupported URL scheme")))
 
   ;; This'll have to do until I figure out
-  ;; how to disable insertion scrolling
+  ;; how to disable insertion scrolling.
   (send page-text scroll-to-position 0)
   (send frame set-status-text "")
   (send frame set-label
@@ -224,21 +230,33 @@
   (send page-text select-all)
   (send page-text clear)
 
-  ;; We're assuming the absence of a scheme implies gopher for convenience.
   (define url
-    (if (url-scheme (string->url uri))
-        uri
-        (string-append "gopher://" uri)))
+    (let ((scheme (url-scheme (string->url uri))))
+      (if scheme
+          ;; Check if string->url misinterpreted the port.
+          ;; The URI foo.bar:70 is somehow interpreted to be a URL with
+          ;; the scheme "foo.bar" with "70" being the path string.
+          (if (string-contains? scheme ".")
+              ;; In this case, our URI clearly has no scheme.
+              (string-append "gopher://" uri)
+              ;; Only now can we assume there's actually a separate
+              ;; URL scheme. It had better be "file".
+              uri)
+          ;; We're assuming the absence of a scheme implies gopher
+          ;; for convenience.
+          (string-append "gopher://" uri))))
 
+  ;; Don't add duplicate or blank entries to the history stack
   (unless (string=? address url)
     (when (non-empty-string? address)
-     (set! previous-address (cons address previous-address)))
+      (set! previous-address (cons address previous-address)))
     (set! address url))
 
   (send frame set-status-text
         (string-append "Loading " url " \u231B")) ; hourglass
   (send address-field set-value url)
 
+  ;; Start the thread
   (set! dial-thread
         (thread (λ _
                   (gui-utils:show-busy-cursor
