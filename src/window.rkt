@@ -173,7 +173,7 @@
   (send frame show #t))
 
 
-;;; TODO: Cleanup
+;;; TODO: This seriously needs a cleanup.
 ;;; Fetches the page from gopher or file URLs and renders it.
 ;;; Must be called in a thread. See navigate below.
 (define (get-page url)
@@ -192,25 +192,30 @@
   (case (url-scheme url)
     (("gopher")
      (send page-text begin-edit-sequence #f #f)
+     ;;; dial-server returns a list of lines returned from the server
+     ;;; or 'error symbol if connection attempt failed.
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
-       (case (car path)
-         ;;; MENU
-         (("1")
-          ;; Insert entries line by line.
-          (for-each (λ (line)
-                      (send page-text insert
-                            ;; Parse each line and return entries.
-                            (generate-entry line))) entries))
-         ;;; TEXT
-         (("0" "m" "M" "p" "x")
-          ;; Insert the text all at once.
-          (send page-text insert
-                (apply string-append entries)))
-         ;;; other?
-         (else
-          ;; TODO: Save binary files.
-          (send page-text insert
-                "I don't know how to handle this type of data."))))
+       (if (eq? entries 'error)
+           (send page-text insert
+                 (string-append "Error: Unable to connect to\n" (url->string url)))
+           (case (car path)
+             ;;; MENU
+             (("1")
+              ;; Insert entries line by line.
+              (for-each (λ (line)
+                          (send page-text insert
+                                ;; Parse each line and return entries.
+                                (generate-entry line))) entries))
+             ;;; TEXT
+             (("0" "m" "M" "p" "x")
+              ;; Insert the text all at once.
+              (send page-text insert
+                    (apply string-append entries)))
+             ;;; other?
+             (else
+              ;; TODO: Save binary files.
+              (send page-text insert
+                    "I don't know how to handle this type of data.")))))
      (send page-text end-edit-sequence))
     (("file")
      (send page-text load-file path 'text))
