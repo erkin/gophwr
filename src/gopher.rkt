@@ -5,9 +5,8 @@
 
 
 ;;; \r\n is mandatory in Gopher
-(define crlf (string #\return #\newline))
 (define (write-line str out)
-  (display (string-append str crlf) out))
+  (display (string-append str "\r\n") out))
 
 ;;; Read the menu line by line until we come across ".\r\n"
 ;;; or EOF, since not every server is compliant.
@@ -22,7 +21,6 @@
          in (append lines (list line))))))
 
 (define (dial-server host port path)
-  ;;; This is the worst error handler I've ever written in my life.
   ;;; Surely there's a better way to do this.
   (call-with-escape-continuation
    (λ (escape)
