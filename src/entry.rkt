@@ -1,5 +1,8 @@
-#lang racket
+#lang racket/base
 (provide generate-entry)
+
+(require (only-in racket/string string-split string-trim))
+
 
 ;;;; Work in progress
 ;;; An "entry" is a selector within a menu that is stylised before being

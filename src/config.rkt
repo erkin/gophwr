@@ -1,6 +1,7 @@
 #lang racket/gui
 (provide (all-defined-out))
 
+
 ;;;; These will be adjustable in the options menu.
 
 (define *homepage* "gopher://suika.erkin.party:70/1/gophwr")

@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 (provide dial-server)
 
 (require (only-in racket/tcp tcp-connect))

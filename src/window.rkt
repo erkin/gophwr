@@ -3,10 +3,11 @@
 
 (require framework)
 (require net/url)
-(require "config.rkt")
-(require "const.rkt")
-(require "gopher.rkt")
-(require "entry.rkt")
+
+(require "config.rkt"
+         "const.rkt"
+         "entry.rkt"
+         "gopher.rkt")
 
 
 ;;; The current page address

@@ -1,7 +1,11 @@
-#lang racket
-(require "const.rkt")
-(require "config.rkt")
-(require "window.rkt")
+#lang racket/base
+
+(require (only-in racket/cmdline command-line))
+
+(require "const.rkt"
+         "config.rkt"
+         "window.rkt")
+
 
 (define (display-version)
   (map displayln *version-message*)
