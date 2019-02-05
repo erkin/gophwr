@@ -16,7 +16,7 @@
   (if (or (eof-object? line) (string=? line "."))
       lines
       (read-loop
-       in (append lines (list (string-append line "\n"))))))
+       in (append lines (list line)))))
 
 (define (dial-server host port path)
   (define-values (in out)

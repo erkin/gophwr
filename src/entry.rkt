@@ -1,7 +1,7 @@
 #lang racket/base
 (provide generate-entry)
 
-(require (only-in racket/string string-split string-trim))
+(require (only-in racket/string string-split))
 
 
 ;;;; Work in progress
@@ -16,8 +16,8 @@
          (type (substring line 0 1))
          (text (car entry))
          (location ; address : port location
-          (string-append ; Port string might contain a leftover newline.
-           (caddr entry) ":" (string-trim (cadddr entry)) (cadr entry))))
+          (string-append 
+           (caddr entry) ":" (cadddr entry) (cadr entry))))
     (case type
       ;; Messages are displayed outright.
       (("i")
