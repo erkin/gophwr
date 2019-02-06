@@ -39,9 +39,9 @@
   (new menu% (parent menu-bar)
        (label "&Edit")))
 
-(define view-menu
-  (new menu% (parent menu-bar)
-       (label "&View")))
+;; (define view-menu
+;;   (new menu% (parent menu-bar)
+;;        (label "&View")))
 
 (define help-menu
   (new menu% (parent menu-bar)
@@ -80,10 +80,10 @@
        (callback (λ _
                    (exit:exit))))
   ;; Preferences dialog doesn't have anything right now.
-  (new menu-item% (parent edit-menu)
-       (label "&Preferences")
-       (callback (λ _
-                   (preferences:show-dialog))))
+  ;; (new menu-item% (parent edit-menu)
+  ;;      (label "&Preferences")
+  ;;      (callback (λ _
+  ;;                  (preferences:show-dialog))))
   ;; message-box is good enough for this.
   (new menu-item% (parent help-menu)
        (label "&About")
@@ -136,10 +136,10 @@
 
 ;;;; Page view
 (define page-canvas
-  (new canvas:basic% (parent frame)
+  (new canvas:color% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus no-hscroll auto-vscroll))
-       (scrolls-per-page 3000)
+       (scrolls-per-page *scrolls-per-page*)
        (wheel-step *wheel-step*)
        ;; Minimum size the canvas can be shrunk to is 16 lines.
        (line-count 16)
