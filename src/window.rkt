@@ -1,7 +1,6 @@
 #lang racket/gui
 (provide initialise-window navigate)
 
-(require framework)
 (require net/url)
 
 (require "config.rkt"
@@ -35,9 +34,9 @@
   (new menu% (parent menu-bar)
        (label "&File")))
 
-(define edit-menu
-  (new menu% (parent menu-bar)
-       (label "&Edit")))
+;; (define edit-menu
+;;   (new menu% (parent menu-bar)
+;;        (label "&Edit")))
 
 ;; (define view-menu
 ;;   (new menu% (parent menu-bar)
@@ -78,12 +77,7 @@
   (new menu-item% (parent file-menu)
        (label "&Quit")
        (callback (λ _
-                   (exit:exit))))
-  ;; Preferences dialog doesn't have anything right now.
-  ;; (new menu-item% (parent edit-menu)
-  ;;      (label "&Preferences")
-  ;;      (callback (λ _
-  ;;                  (preferences:show-dialog))))
+                   (exit '()))))
   ;; message-box is good enough for this.
   (new menu-item% (parent help-menu)
        (label "&About")
@@ -136,7 +130,7 @@
 
 ;;;; Page view
 (define page-canvas
-  (new canvas:color% (parent frame)
+  (new editor-canvas% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus no-hscroll auto-vscroll))
        (scrolls-per-page *scrolls-per-page*)
@@ -147,14 +141,13 @@
        (stretchable-height #t)))
 
 (define page-text
-  (new text:hide-caret/selection%
-       (line-spacing 0.6)
+  (new text%
+   (line-spacing 0.6)
        (auto-wrap #f)))
 
 
 ;;; GUI starts here.
 (define (initialise-window)
-  (application:current-app-name *project-name*)
   (populate-menu-bar)
 
   (send* *theme*
@@ -272,9 +265,9 @@
     ;; Start the thread
     (set! dial-thread
           (thread (λ _
-                    (gui-utils:show-busy-cursor
-                     (λ _
-                       (get-page (string->url url)))))))))
+                    (begin-busy-cursor)
+                    (get-page (string->url url))
+                    (end-busy-cursor))))))
 
 (define (go-back)
   (unless (null? previous-address)
