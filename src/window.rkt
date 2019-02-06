@@ -16,7 +16,7 @@
 (define previous-address '())
 (define next-address '())
 ;;; Thread for TCP connection (see gopher.rkt)
-(define dial-thread #f)
+(define dial-thread (thread void))
 
 
 ;;; Main window
@@ -147,7 +147,7 @@
        (stretchable-height #t)))
 
 (define page-text
-  (new text:basic%
+  (new text:hide-caret/selection%
        (line-spacing 0.6)
        (auto-wrap #f)))
 
@@ -238,42 +238,43 @@
 
 ;;; Start the thread to fetch the page and render it
 (define (navigate uri)
-  ;; Wipe the canvas
-  (send page-text select-all)
-  (send page-text clear)
+  (unless (thread-running? dial-thread)
+    ;; Wipe the canvas
+    (send page-text select-all)
+    (send page-text clear)
 
-  (define url
-    (let ((scheme (url-scheme (string->url uri))))
-      (if scheme
-          ;; Check if string->url misinterpreted the port.
-          ;; The URI foo.bar:70 is somehow interpreted to be a URL with
-          ;; the scheme "foo.bar" with "70" being the path string.
-          (if (string-contains? scheme ".")
-              ;; In this case, our URI clearly has no scheme.
-              (string-append "gopher://" uri)
-              ;; Only now can we assume there's actually a separate
-              ;; URL scheme. It had better be "file".
-              uri)
-          ;; We're assuming the absence of a scheme implies gopher
-          ;; for convenience.
-          (string-append "gopher://" uri))))
+    (define url
+      (let ((scheme (url-scheme (string->url uri))))
+        (if scheme
+            ;; Check if string->url misinterpreted the port.
+            ;; The URI foo.bar:70 is somehow interpreted to be a URL with
+            ;; the scheme "foo.bar" with "70" being the path string.
+            (if (string-contains? scheme ".")
+                ;; In this case, our URI clearly has no scheme.
+                (string-append "gopher://" uri)
+                ;; Only now can we assume there's actually a separate
+                ;; URL scheme. It had better be "file".
+                uri)
+            ;; We're assuming the absence of a scheme implies gopher
+            ;; for convenience.
+            (string-append "gopher://" uri))))
 
-  ;; Don't add duplicate or blank entries to the history stack
-  (unless (string=? address url)
-    (when (non-empty-string? address)
-      (set! previous-address (cons address previous-address)))
-    (set! address url))
+    ;; Don't add duplicate or blank entries to the history stack
+    (unless (string=? address url)
+      (when (non-empty-string? address)
+        (set! previous-address (cons address previous-address)))
+      (set! address url))
 
-  (send frame set-status-text
-        (string-append "Loading " url " \u231B")) ; hourglass
-  (send address-field set-value url)
+    (send frame set-status-text
+          (string-append "Loading " url " \u231B")) ; hourglass
+    (send address-field set-value url)
 
-  ;; Start the thread
-  (set! dial-thread
-        (thread (λ _
-                  (gui-utils:show-busy-cursor
-                   (λ _
-                     (get-page (string->url url))))))))
+    ;; Start the thread
+    (set! dial-thread
+          (thread (λ _
+                    (gui-utils:show-busy-cursor
+                     (λ _
+                       (get-page (string->url url)))))))))
 
 (define (go-back)
   (unless (null? previous-address)
