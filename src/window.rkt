@@ -196,8 +196,7 @@
      ;;; or 'error symbol if connection attempt failed.
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
        (if (eq? entries 'error)
-           (send page-text insert
-                 (string-append "Error: Unable to connect to\n" (url->string url)))
+           (insert-error "Unable to connect to " (url->string url))
            (case (car path)
              ;;; MENU
              (("1")
@@ -214,13 +213,17 @@
              ;;; other?
              (else
               ;; TODO: Save binary files.
-              (send page-text insert
-                    "I don't know how to handle this type of data.")))))
+              ;; ";" (video) type is especially problematic
+              ;; as the URL parser skips through it.
+              (insert-error "I don't know how to handle " (car path) " type.")))))
      (send page-text end-edit-sequence))
     (("file")
-     (send page-text load-file path 'text))
+     (with-handlers ((exn:fail:filesystem?
+                      (λ _
+                        (insert-error "Unable to open file " path))))
+       (send page-text load-file path 'text)))
     (else
-     (send page-text insert "Error: Unsupported URL scheme")))
+     (insert-error "Unsupported URL scheme: " (url-scheme url))))
 
   ;; This'll have to do until I figure out
   ;; how to disable insertion scrolling.
@@ -229,6 +232,9 @@
   (send frame set-label
         (string-append *project-name* " \u2014 " address)))
 
+
+(define (insert-error . strings)
+  (send page-text insert (string-append* "Error: " strings)))
 
 ;;; Start the thread to fetch the page and render it
 (define (navigate uri)
