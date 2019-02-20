@@ -1,5 +1,5 @@
 * gophwr v0.1
-  A graphical gopher browser in =racket/gui= using =framework=.
+  A graphical gopher browser in =racket/gui=.
 
 ** Status
    This project is still under construction and is barely functional.
