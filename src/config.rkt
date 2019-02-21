@@ -21,3 +21,6 @@
   (make-object color% #x11 #x11 #x11))
 
 (define *font* "Unifont")
+
+;;; EXPERIMENTAL
+(define *ssl-enabled?* #f)

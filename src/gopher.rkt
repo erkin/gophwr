@@ -1,7 +1,10 @@
 #lang racket/base
 (provide dial-server)
 
+(require "config.rkt")
+
 (require (only-in racket/tcp tcp-connect))
+(require (only-in openssl ssl-connect))
 
 
 ;;; \r\n is mandatory in Gopher
@@ -20,15 +23,26 @@
         (read-loop
          in (append lines (list line))))))
 
+(define (connect-server connect host port path)
+  (with-handlers
+    ((exn:fail:network?
+      ;; If SSL connection fails, try again as plaintext.
+      (λ (ex)
+        (if (eq? connect ssl-connect)
+            (connect-server tcp-connect host port path)
+            ;; If plaintext connection fails, return the exception.
+            ex))))
+    (let-values (((in out) (connect host port)))
+      ;; Request the desired path.
+      (write-line path out)
+      (close-output-port out)
+      ;; Read what server returns.
+      (read-loop in '()))))
+
 (define (dial-server host port path)
-  ;;; Surely there's a better way to do this.
-  (call-with-escape-continuation
-   (λ (escape)
-     ;; Bail out with the 'error symbol if connection attempt fails.
-     (define-values (in out)
-       (with-handlers ((exn:fail:network? (λ _ (escape 'error))))
-         ;; Assume port 70 if no port is given.
-         (tcp-connect host (if port port 70))))
-     (write-line path out)
-     (close-output-port out)
-     (read-loop in '()))))
+  (connect-server
+   ;; Try to connect with SSL if it's enabled.
+   (if *ssl-enabled?*
+       ssl-connect
+       tcp-connect)
+   host port path))
