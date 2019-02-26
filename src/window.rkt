@@ -1,12 +1,12 @@
 #lang racket/gui
 (provide initialise-window navigate)
 
-(require net/url)
-
 (require "config.rkt"
          "const.rkt"
          "entry.rkt"
          "gopher.rkt")
+
+(require net/url)
 
 
 ;;; The current page address
@@ -188,16 +188,18 @@
      ;;; dial-server returns a list of lines returned from the server
      ;;; or 'error symbol if connection attempt failed.
      (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
-       (if (eq? entries 'error)
-           (insert-error "Unable to connect to " (url->string url))
+       (if (eq? (car entries) 'error)
+           (insert-error
+            "Unable to connect to " (url->string url) ":\n" (cdr entries))
            (case (car path)
              ;;; MENU
              (("1")
               ;; Insert entries line by line.
               (for-each (λ (line)
+                          ;; Parse each line and return entries.
                           (send page-text insert
-                                ;; Parse each line and return entries.
-                                (generate-entry line))) entries))
+                                (string-append (generate-entry line) "\n")))
+                        entries))
              ;;; TEXT
              (("0" "m" "M" "p" "x")
               ;; Insert the text all at once.
@@ -240,7 +242,7 @@
       (let ((scheme (url-scheme (string->url uri))))
         (if scheme
             ;; Check if string->url misinterpreted the port.
-            ;; The URI foo.bar:70 is somehow interpreted to be a URL with
+            ;; eg foo.bar:70 is somehow interpreted to be a URL with
             ;; the scheme "foo.bar" with "70" being the path string.
             (if (string-contains? scheme ".")
                 ;; In this case, our URI clearly has no scheme.

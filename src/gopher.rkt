@@ -1,10 +1,11 @@
-#lang racket/base
+#lang racket
 (provide dial-server)
 
 (require "config.rkt")
 
-(require (only-in racket/tcp tcp-connect))
-(require (only-in openssl ssl-connect))
+(require racket/exn)
+(require racket/tcp)
+(require openssl)
 
 
 ;;; \r\n is mandatory in Gopher
