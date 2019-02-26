@@ -61,15 +61,15 @@
        (label "&Refresh")
        (callback (λ _
                    (navigate address))))
-  ;; Kill the thread that's loading the page.
-  ;; Surely there's a better way to do this.
-  ;; It works but it's very buggy.
+  ;; Gracefully shutdown the thread.
   (new menu-item% (parent file-menu)
        (label "&Stop")
        (callback (λ _
-                   (kill-thread dial-thread))))
-  ;; Save page to file
-  ;; Note that this saves the formatted version of menus
+                   (send page-text select-all)
+                   (send page-text clear)
+                   (send page-text insert "Stopped"))))
+  ;; Save page to file.
+  ;; Note that this saves the formatted version of menus.
   (new menu-item% (parent file-menu)
        (label "&Download")
        (callback (λ _
@@ -216,24 +216,22 @@
      (with-handlers ((exn:fail:filesystem?
                       (λ _
                         (insert-error "Unable to open file " path))))
+       ;; This doesn't work. Why doesn't it work? Why?
        (send page-text load-file path 'text)))
     (else
-     (insert-error "Unsupported URL scheme: " (url-scheme url))))
-
-  ;; This'll have to do until I figure out
-  ;; how to disable insertion scrolling.
-  (send page-text scroll-to-position 0)
-  (send frame set-status-text "")
-  (send frame set-label
-        (string-append *project-name* " \u2014 " address)))
+     (insert-error "Unsupported URL scheme: " (url-scheme url)))))
 
 
 (define (insert-error . strings)
   (send page-text insert (string-append* "Error: " strings)))
 
 ;;; Start the thread to fetch the page and render it
-(define (navigate uri)
-  (unless (thread-running? dial-thread)
+(define (navigate destination)
+  ;; Clean whitespace from the address.
+  (define uri (string-join (string-split destination) ""))
+
+  ;; Do nothing if there's already a thread running.
+  (when (and (non-empty-string? uri) (not (thread-running? dial-thread)))
     ;; Wipe the canvas
     (send page-text select-all)
     (send page-text clear)
@@ -266,10 +264,16 @@
 
     ;; Start the thread
     (set! dial-thread
-          (thread (λ _
-                    (begin-busy-cursor)
-                    (get-page (string->url url))
-                    (end-busy-cursor))))))
+          (thread
+           (λ ()
+             (begin-busy-cursor)
+             (get-page (string->url url))
+             (end-busy-cursor)
+
+             (send page-text scroll-to-position 0)
+             (send frame set-status-text "")
+             (send frame set-label
+                   (string-append *project-name* " \u2014 " address)))))))
 
 (define (go-back)
   (unless (null? previous-address)
