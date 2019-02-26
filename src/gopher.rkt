@@ -31,8 +31,8 @@
       (λ (ex)
         (if (eq? connect ssl-connect)
             (connect-server tcp-connect host port path)
-            ;; If plaintext connection fails, return the exception.
-            ex))))
+            ;; If plaintext connection fails, return the exception message.
+            (cons 'error (exn->string ex))))))
     (let-values (((in out) (connect host port)))
       ;; Request the desired path.
       (write-line path out)
@@ -41,9 +41,14 @@
       (read-loop in '()))))
 
 (define (dial-server host port path)
-  (connect-server
-   ;; Try to connect with SSL if it's enabled.
-   (if *ssl-enabled?*
-       ssl-connect
-       tcp-connect)
-   host port path))
+  (let ((results
+         (connect-server
+          ;; Try to connect with SSL if it's enabled.
+          (if *ssl-enabled?*
+              ssl-connect
+              tcp-connect)
+          ;; Default to :70.
+          host (if port port 70) path)))
+    (if (empty? results)
+        (cons 'error "Server returned nothing.")
+        results)))
