@@ -206,7 +206,7 @@
              (("0" "m" "M" "p" "x")
               ;; Insert the text all at once.
               (send page-text insert
-                    (apply string-append entries)))
+                    (string-join entries "\n")))
              ;;; other?
              (else
               ;; TODO: Save binary files.
