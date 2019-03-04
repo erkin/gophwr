@@ -12,6 +12,9 @@
 (define (write-line str out)
   (display (string-append str "\r\n") out))
 
+;;; TODO: Eschew the line-based approach and slurp the whole file in one
+;;; go as binary, then parse it later.
+
 ;;; Read the menu line by line until we come across ".\r\n"
 ;;; or EOF, since not every server is compliant.
 (define (read-loop in lines)
@@ -40,11 +43,14 @@
       ;; Read what server returns.
       (read-loop in '()))))
 
+;;; Right now, the window thread expects either a list of strings
+;;; or ('error . "error message").
+;;; Ideally, we should be using structs here. (TODO)
 (define (dial-server host port path)
   (let ((results
          (connect-server
           ;; Try to connect with SSL if it's enabled.
-          (if *ssl-enabled?*
+          (if *tls-enabled?*
               ssl-connect
               tcp-connect)
           ;; Default to :70.

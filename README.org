@@ -11,10 +11,10 @@
 *** Work in progress
     + TLS support
     + Clickable directory links
-    + Keyboard shortcuts
-    + Bookmarks
 
 *** Wishlist
+    + Keyboard shortcuts
+    + Bookmarks
     + Tabbed browsing
     + Themes
       + Font settings

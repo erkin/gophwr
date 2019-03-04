@@ -23,4 +23,4 @@
 (define *font* "Unifont")
 
 ;;; EXPERIMENTAL
-(define *ssl-enabled?* #f)
+(define *tls-enabled?* #f)

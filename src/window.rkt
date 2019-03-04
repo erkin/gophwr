@@ -7,7 +7,7 @@
          "gopher.rkt")
 
 (require net/url)
-
+(require net/uri-codec)
 
 ;;; The current page address
 (define address "")
@@ -17,6 +17,8 @@
 ;;; Thread for TCP connection (see gopher.rkt)
 (define dial-thread (thread void))
 
+;;; 'semi interferes with ; (video) type.
+(current-alist-separator-mode 'amp)
 
 ;;; Main window
 (define frame

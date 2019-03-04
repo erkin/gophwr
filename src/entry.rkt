@@ -1,6 +1,8 @@
 #lang racket
 (provide generate-entry)
 
+(require net/sendurl)
+
 ;;;; Work in progress
 ;;; An "entry" is a selector within a menu that is stylised before being
 ;;; inserted into the editor.
@@ -10,20 +12,21 @@
 ;;; TODO: Rewrite as snip%s.
 (define (generate-entry line)
   ;; Don't bother preparing an entry if it's not a real menu item.
+  ;; I sure hope this ordinary line doesn't contain a tab character.
   (if (string-contains? line "\t")
       (let* ((++ string-append)
              ;; Strings must be untrimmed to accommodate for blank i lines.
              (entry (string-split (substring line 1) "\t" #:trim? #f))
              (type (substring line 0 1))
-             (text (car entry))
+             (text (first entry))
              (location ; address : port location
               (++
-               (caddr entry) ":" (cadddr entry) (cadr entry))))
+               (third entry) ":" (fourth entry) (second entry))))
         (case type
           ;; Messages are displayed outright.
           (("i")
            ;; Titles should be bold.
-           (if (string=? (cadr entry) "TITLE")
+           (if (string=? (second entry) "TITLE")
                (++ "Page title: " text)
                text))
           ;; Errors are like messages but should be displayed
@@ -36,12 +39,12 @@
           ;; Directories should be clickable and navigable.
           (("1")
            (++ "[dir] " text " | " location))
-          ;; Web pages should be handled through xdg-open
-          ;; to delegate to a web browser.
+          ;; Web pages should be handled through send-url.
           (("h")
-           (if (string=? "URL:" (substring (cadr entry) 0 4))
+           (if (and (> (string-length (second entry)) 4)
+                    (string=? "URL:" (substring (second entry) 0 4)))
                (++ "[web] " text " -> "
-                   (substring (cadr entry) 4))
+                   (substring (second entry) 4))
                (++ "[html] " text " | " location)))
           ;; I guess we need an image viewer.
           (("g" "I")
