@@ -1,60 +1,105 @@
 #lang racket
-(provide dial-server)
+(provide get-page)
 
 (require "config.rkt")
+(require "const.rkt")
+(require "entry.rkt")
 
-(require racket/exn)
 (require racket/tcp)
 (require openssl)
 
+
+;; Just a nitpick.
+(define string->char
+  (compose car string->list))
 
 ;;; \r\n is mandatory in Gopher
 (define (write-line str out)
   (display (string-append str "\r\n") out))
 
-;;; TODO: Eschew the line-based approach and slurp the whole file in one
-;;; go as binary, then parse it later.
-
-;;; Read the menu line by line until we come across ".\r\n"
-;;; or EOF, since not every server is compliant.
-(define (read-loop in lines)
+(define (read-lines in lines)
   (let ((line (read-line in 'return-linefeed)))
     (if (or (eof-object? line) (string=? line "."))
-        ;; Close the port and return the list of lines
-        (begin
-          (close-input-port in)
-          lines)
-        (read-loop
-         in (append lines (list line))))))
+        lines
+        (read-lines in (append lines (list line))))))
 
-(define (connect-server connect host port path)
-  (with-handlers
-    ((exn:fail:network?
-      ;; If SSL connection fails, try again as plaintext.
-      (λ (ex)
-        (if (eq? connect ssl-connect)
-            (connect-server tcp-connect host port path)
-            ;; If plaintext connection fails, return the exception message.
-            (cons 'error (exn->string ex))))))
-    (let-values (((in out) (connect host port)))
-      ;; Request the desired path.
-      (write-line path out)
-      (close-output-port out)
-      ;; Read what server returns.
-      (read-loop in '()))))
+;; To let the user know the error comes from the client, not the server.
+(define (error-string . strs)
+  (string-append* *project-name* " Error: " strs))
 
-;;; Right now, the window thread expects either a list of strings
-;;; or ('error . "error message").
-;;; Ideally, we should be using structs here. (TODO)
-(define (dial-server host port path)
-  (let ((results
-         (connect-server
-          ;; Try to connect with SSL if it's enabled.
-          (if *tls-enabled?*
-              ssl-connect
-              tcp-connect)
-          ;; Default to :70.
-          host (if port port 70) path)))
-    (if (empty? results)
-        (cons 'error "Server returned nothing.")
-        results)))
+;; We're using a simple in-house parser because the official one is too
+;; complicated for our simple but specific needs.
+;; We won't be dealing with URL schemes or parameters, but we'll have to
+;; deal with URIs that contain ';' and '	' as ordinary characters.
+(define magic-regexp
+  ;; Domain probably doesn't work with IPv6 right now.
+  ;; Port and path are optional.
+  ;; File type is mandatory if there's a path.
+  ;; Final '/' must be trimmed out.
+  (regexp
+   (string-append
+    "^"                ; Regexp begins here
+      "([^/?#:]*)"     ; Domain can be anything, including IP addresses
+      "(:[0-9]+)?"     ; Port
+      "(/"             ; Path begins here
+        "([^/])"       ; Single character file type
+          "(/[^?#]*)*" ; Rest of the path
+      ")?"             ; Path ends here
+    "$"                ; Regexp ends here
+    )))
+
+(define (get-page address)
+  (let ((urn (regexp-match magic-regexp
+                           (string-trim address "/" #:repeat? #t))))
+    ;; (address domain :port /type/path type /path)
+    ;; "foo.bar:69/0/baz/quux" becomes:
+    ;;   '("foo.bar:69/0/baz/quux" "foo.bar" ":69"
+    ;;     "/0/baz/quux" "0" "/baz/quux")
+    (if (and urn (non-empty-string? (first urn)))
+        (let ((host (second urn))
+              (port (third  urn))
+              (type (fifth  urn))
+              (path (sixth  urn)))
+          (connect-server
+           host
+           (if port
+               ;; ":70" -> 70
+               (string->number (substring port 1))
+               ;; Fall back to 70 by default.
+               70)
+           ;; Fall back to / by default, which is the main menu.
+           (string->char (or type "1"))
+           (or path "/")))
+        ;; Return an error if the address is not valid.
+        (error-string "Invalid path: " address))))
+
+(define (connect-server host port type path)
+  (define-values (in out)
+    ;; Try to connect with SSL if it's enabled.
+    ;; Doesn't work reliably.
+    ;; TODO: Add back the fallback mechanism.
+    ((if *tls-enabled?*
+         ssl-connect
+         tcp-connect)
+     host port))
+  ;; Request the desired path.
+  (write-line path out)
+  (flush-output out)
+  (close-output-port out)
+  ;; Read what the server returns.
+  (let ((result
+         (case type
+           ((#\1)
+            (generate-entries (read-lines in '())))
+           ((#\0 #\m #\M #\p #\x)
+            (string-join (read-lines in '()) "\n"))
+           ((#\g #\I)
+            "Can't handle images right now.")
+           ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
+            "Can't handle binary files right now.")
+           (else
+            "File type unrecognised."))))
+    (close-input-port in)
+    (if (non-empty-string? result)
+        result
+        (error-string "The server returned nothing."))))

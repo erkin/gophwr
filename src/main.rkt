@@ -33,4 +33,4 @@
   (initialise-window)
   
   ;; Automatically navigate to the first argument at startup.
-  (navigate initial-address))
+  (go-to initial-address))

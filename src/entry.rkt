@@ -1,14 +1,17 @@
 #lang racket
-(provide generate-entry)
+(provide generate-entries)
 
-(require net/sendurl)
+#; (require net/sendurl)
 
-;;;; Work in progress
+;;;; Work in progress | TODO: Rewrite this from scratch
 ;;; An "entry" is a selector within a menu that is stylised before being
 ;;; inserted into the editor.
 
+;;; Take the menu lines and return the parsed form.
+(define (generate-entries lines)
+  (string-join (map generate-entry lines) "\n"))
 
-;;; Temporarily handled as ordinary strings
+;;; Temporarily handled as ordinary strings.
 ;;; TODO: Rewrite as snip%s.
 (define (generate-entry line)
   ;; Don't bother preparing an entry if it's not a real menu item.
@@ -19,9 +22,11 @@
              (entry (string-split (substring line 1) "\t" #:trim? #f))
              (type (substring line 0 1))
              (text (first entry))
-             (location ; address : port location
+             (location ; address : port / type / location
               (++
-               (third entry) ":" (fourth entry) (second entry))))
+               (third entry) ":" (fourth entry)
+               (if (non-empty-string? type) type "1")
+               "/" (second entry))))
         (case type
           ;; Messages are displayed outright.
           (("i")

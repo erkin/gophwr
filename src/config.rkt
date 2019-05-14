@@ -4,7 +4,7 @@
 
 ;;;; These will be adjustable in the options menu.
 
-(define *homepage* "gopher://suika.erkin.party:70/1/gophwr")
+(define *homepage* "suika.erkin.party:70/1/gophwr")
 
 (define *scrolls-per-page* 500)
 (define *wheel-step* 1)
@@ -22,5 +22,5 @@
 
 (define *font* "Unifont")
 
-;;; EXPERIMENTAL
+;;; EXPERIMENTAL - DOESN'T WORK
 (define *tls-enabled?* #f)

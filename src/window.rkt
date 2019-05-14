@@ -1,5 +1,5 @@
 #lang racket/gui
-(provide initialise-window navigate)
+(provide initialise-window go-to)
 
 (require "config.rkt"
          "const.rkt"
@@ -49,29 +49,22 @@
        (label "&Help")))
 
 (define (populate-menu-bar)
-  ;; Open local file
-  (new menu-item% (parent file-menu)
-       (label "&Open")
-       (callback
-        (λ _
-          (navigate
-           (url->string (path->url ; oh god why
-                         (send page-text get-file
-                               (find-system-path 'home-dir))))))))
   ;; Navigate to the currently loaded address
   (new menu-item% (parent file-menu)
        (label "&Refresh")
        (callback (λ _
-                   (navigate address))))
+                   (refresh))))
   ;; Gracefully shutdown the thread.
   (new menu-item% (parent file-menu)
        (label "&Stop")
        (callback (λ _
+                   ;; TODO: stop thread here
                    (send page-text select-all)
                    (send page-text clear)
                    (send page-text insert "Stopped"))))
   ;; Save page to file.
   ;; Note that this saves the formatted version of menus.
+  ;; TODO: Fix this ^
   (new menu-item% (parent file-menu)
        (label "&Download")
        (callback (λ _
@@ -100,7 +93,6 @@
 
 
 ;;;; Keys
-;;; Stubs for now
 (define back-key
   (new button% (parent address-pane)
        (label "\u2397")
@@ -113,7 +105,7 @@
 (define home-key
   (new button% (parent address-pane)
        (label "\u2302")
-       (callback (λ _ (navigate *homepage*)))))
+       (callback (λ _ (go-to *homepage*)))))
 
 (define address-field
   (new text-field% (parent address-pane)
@@ -122,12 +114,12 @@
        ;; Call navigate-addressbar iff the callback event is pressing return key.
        (callback (λ (f event)
                    (when (equal? (send event get-event-type) 'text-field-enter)
-                     (navigate (send f get-value)))))))
+                     (go-to (send f get-value)))))))
 
 (define address-button
   (new button% (parent address-pane)
        (label "\u2388") ; Helm sign
-       (callback (λ _ (navigate (send address-field get-value))))))
+       (callback (λ _ (go)))))
 
 
 ;;;; Page view
@@ -168,122 +160,70 @@
   (send frame show #t))
 
 
-;;; TODO: This seriously needs a cleanup.
-;;; Fetches the page from gopher or file URLs and renders it.
-;;; Must be called in a thread. See navigate below.
-(define (get-page url)
-  ;; Concatenate path components
-  (define path
-    (let ((path-string (string-join (map path/param-path (url-path url)) "/")))
-      (cond
-        ((string=? (url-scheme url) "file") ; File links have no data types.
-         (string-append "/" path-string)) ; Always an absolute path.
-        ;; Take the first element of the path
-        ((non-empty-string? path-string)
-         (cons (substring path-string 0 1) (substring path-string 1)))
-        (else ; a Gopher home page link
-         (cons "1" "/")))))
+;;; Frame and page details
+(define (clear-page)
+  (send page-text select-all)
+  (send page-text clear))
 
-  (case (url-scheme url)
-    (("gopher")
-     (send page-text begin-edit-sequence #f #f)
-     ;;; dial-server returns a list of lines returned from the server
-     ;;; or 'error symbol if connection attempt failed.
-     (let ((entries (dial-server (url-host url) (url-port url) (cdr path))))
-       (if (eq? (car entries) 'error)
-           (insert-error
-            "Unable to connect to " (url->string url) ":\n" (cdr entries))
-           (case (car path)
-             ;;; MENU
-             (("1")
-              ;; Insert entries line by line.
-              (for-each (λ (line)
-                          ;; Parse each line and return entries.
-                          (send page-text insert
-                                (string-append (generate-entry line) "\n")))
-                        entries))
-             ;;; TEXT
-             (("0" "m" "M" "p" "x")
-              ;; Insert the text all at once.
-              (send page-text insert
-                    (string-join entries "\n")))
-             ;;; other?
-             (else
-              ;; TODO: Save binary files.
-              ;; ";" (video) type is especially problematic
-              ;; as the URL parser skips through it.
-              (insert-error "I don't know how to handle " (car path) " type.")))))
-     (send page-text end-edit-sequence))
-    (("file")
-     (with-handlers ((exn:fail:filesystem?
-                      (λ _
-                        (insert-error "Unable to open file " path))))
-       ;; This doesn't work. Why doesn't it work? Why?
-       (send page-text load-file path 'text)))
-    (else
-     (insert-error "Unsupported URL scheme: " (url-scheme url)))))
+(define (loading urn)
+  (send frame set-status-text
+        (string-append "Loading " urn " \u231B")) ; hourglass
+  (send address-field set-value urn))
+
+(define (loaded)
+  (send page-text scroll-to-position 0)
+  (send frame set-status-text "")
+  (send frame set-label
+        (string-append *project-name*
+                       " \u2014 " address)))
 
 
-(define (insert-error . strings)
-  (send page-text insert (string-append* "Error: " strings)))
-
-;;; Start the thread to fetch the page and render it
-(define (navigate destination)
-  ;; Clean whitespace from the address.
-  (define uri (string-join (string-split destination) ""))
-
-  ;; Do nothing if there's already a thread running.
-  (when (and (non-empty-string? uri) (not (thread-running? dial-thread)))
-    ;; Wipe the canvas
-    (send page-text select-all)
-    (send page-text clear)
-
-    (define url
-      (let ((scheme (url-scheme (string->url uri))))
-        (if scheme
-            ;; Check if string->url misinterpreted the port.
-            ;; eg foo.bar:70 is somehow interpreted to be a URL with
-            ;; the scheme "foo.bar" with "70" being the path string.
-            (if (string-contains? scheme ".")
-                ;; In this case, our URI clearly has no scheme.
-                (string-append "gopher://" uri)
-                ;; Only now can we assume there's actually a separate
-                ;; URL scheme. It had better be "file".
-                uri)
-            ;; We're assuming the absence of a scheme implies gopher
-            ;; for convenience.
-            (string-append "gopher://" uri))))
-
-    ;; Don't add duplicate or blank entries to the history stack
-    (unless (string=? address url)
-      (when (non-empty-string? address)
-        (set! previous-address (cons address previous-address)))
-      (set! address url))
-
-    (send frame set-status-text
-          (string-append "Loading " url " \u231B")) ; hourglass
-    (send address-field set-value url)
-
-    ;; Start the thread
-    (set! dial-thread
-          (thread
-           (λ ()
-             (begin-busy-cursor)
-             (get-page (string->url url))
-             (end-busy-cursor)
-
-             (send page-text scroll-to-position 0)
-             (send frame set-status-text "")
-             (send frame set-label
-                   (string-append *project-name* " \u2014 " address)))))))
+;;; Navigation
+(define (refresh)
+  (go-to address))
 
 (define (go-back)
   (unless (null? previous-address)
     (set! next-address (cons address next-address))
-    (navigate (car previous-address))
+    (go-to (car previous-address))
     (set! previous-address (cdr previous-address))))
 
 (define (go-forward)
   (unless (null? next-address)
-    (navigate (car next-address))
+    (go-to (car next-address))
     (set! next-address (cdr next-address))))
+
+(define (go)
+  (go-to (send address-field get-value)))
+
+(define (go-to uri)
+  (define urn
+    ;; Strip out URL scheme from the address.
+    (if (and (> (string-length uri) 8)
+             (string=? (substring uri 0 9) "gopher://"))
+        (substring uri 9)
+        uri))
+  ;; Wipe the screen, regardless of whether the address is blank.
+  (clear-page)
+  ;; Navigate to the URN if it is not empty.
+  (when (non-empty-string? urn)
+    ;; Update the history stack, omitting duplicate or blank entries
+    (unless (string=? address urn)
+      (when (non-empty-string? address)
+        (set! previous-address (cons address previous-address)))
+      ;; Refresh the global address value, if the URL scheme was
+      ;; stripped out.
+      (set! address urn))
+    (loading urn)
+    ;; Start the thread to dial the address and render the page.
+    (set! dial-thread
+          (thread (λ () (render-page urn))))))
+
+;;; Page rendering
+(define (render-page urn)
+  ;;; This procedure is called from a separate thread.
+  (begin-busy-cursor)
+  (send page-text insert (get-page urn))
+  (end-busy-cursor)
+  ;; Reset the fresh page and die.
+  (loaded))
