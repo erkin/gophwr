@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require (only-in racket/cmdline command-line))
+(require racket/cmdline)
 
 (require "const.rkt"
          "config.rkt"
@@ -12,25 +12,25 @@
   (exit null))
 
 (module+ main
-  (define initial-address
+  (define addresses
     (command-line
-     #:program (string-downcase *project-name*)
+     #:program *project-name*
 
      #:once-any
      (("--version" "-v")
       "Show version and licence information"
       (display-version))
 
-     ;; Take a list of arguments and return the first if it exists,
+     ;; Take and return a list of addresses if any argument is given,
      ;; return the homepage otherwise.
      ;; The reason we do it with a list is to be able to handle multiple
      ;; addresses as separate tabs in the future.
-     #:args arguments
-     (if (null? arguments)
-         *homepage*
-         (car arguments))))
+     #:args addresses
+     (if (null? addresses)
+         (list *homepage*)
+         addresses)))
 
   (initialise-window)
   
   ;; Automatically navigate to the first argument at startup.
-  (go-to initial-address))
+  (go-to (car addresses)))

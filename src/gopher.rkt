@@ -1,10 +1,12 @@
-#lang racket
+#lang racket/base
 (provide get-page)
 
 (require "config.rkt")
 (require "const.rkt")
 (require "entry.rkt")
 
+(require racket/list)
+(require racket/string)
 (require racket/tcp)
 (require openssl)
 
@@ -17,11 +19,13 @@
 (define (write-line str out)
   (display (string-append str "\r\n") out))
 
-(define (read-lines in lines)
-  (let ((line (read-line in 'return-linefeed)))
-    (if (or (eof-object? line) (string=? line "."))
-        lines
-        (read-lines in (append lines (list line))))))
+(define (read-lines in)
+  (define (read-loop in lines)
+    (let ((line (read-line in 'return-linefeed)))
+      (if (or (eof-object? line) (string=? line "."))
+          lines
+          (read-loop in (append lines (list line))))))
+  (read-loop in '()))
 
 ;; To let the user know the error comes from the client, not the server.
 (define (error-string . strs)
@@ -90,9 +94,9 @@
   (let ((result
          (case type
            ((#\1)
-            (generate-entries (read-lines in '())))
+            (generate-entries (read-lines in)))
            ((#\0 #\m #\M #\p #\x)
-            (string-join (read-lines in '()) "\n"))
+            (string-join (read-lines in) "\n"))
            ((#\g #\I)
             "Can't handle images right now.")
            ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)

@@ -6,8 +6,6 @@
          "entry.rkt"
          "gopher.rkt")
 
-(require net/url)
-(require net/uri-codec)
 
 ;;; The current page address
 (define address "")
@@ -15,10 +13,8 @@
 (define previous-address '())
 (define next-address '())
 ;;; Thread for TCP connection (see gopher.rkt)
-(define dial-thread (thread void))
+(define dial-custodian #f)
 
-;;; 'semi interferes with ; (video) type.
-(current-alist-separator-mode 'amp)
 
 ;;; Main window
 (define frame
@@ -58,13 +54,11 @@
   (new menu-item% (parent file-menu)
        (label "&Stop")
        (callback (λ _
-                   ;; TODO: stop thread here
-                   (send page-text select-all)
-                   (send page-text clear)
-                   (send page-text insert "Stopped"))))
+                   (custodian-shutdown-all dial-custodian)
+                   (loaded)
+                   (send frame set-status-text "Stopped!"))))
   ;; Save page to file.
   ;; Note that this saves the formatted version of menus.
-  ;; TODO: Fix this ^
   (new menu-item% (parent file-menu)
        (label "&Download")
        (callback (λ _
@@ -168,14 +162,16 @@
 (define (loading urn)
   (send frame set-status-text
         (string-append "Loading " urn " \u231B")) ; hourglass
-  (send address-field set-value urn))
+  (send address-field set-value urn)
+  (begin-busy-cursor))
 
 (define (loaded)
   (send page-text scroll-to-position 0)
   (send frame set-status-text "")
   (send frame set-label
         (string-append *project-name*
-                       " \u2014 " address)))
+                       " \u2014 " address))
+  (end-busy-cursor))
 
 
 ;;; Navigation
@@ -214,16 +210,10 @@
       ;; Refresh the global address value, if the URL scheme was
       ;; stripped out.
       (set! address urn))
-    (loading urn)
     ;; Start the thread to dial the address and render the page.
-    (set! dial-thread
-          (thread (λ () (render-page urn))))))
-
-;;; Page rendering
-(define (render-page urn)
-  ;;; This procedure is called from a separate thread.
-  (begin-busy-cursor)
-  (send page-text insert (get-page urn))
-  (end-busy-cursor)
-  ;; Reset the fresh page and die.
-  (loaded))
+    (set! dial-custodian (make-custodian (current-custodian)))
+    (thread (λ ()
+              (current-custodian dial-custodian)
+              (loading urn)
+              (send page-text insert (get-page urn))
+              (loaded)))))

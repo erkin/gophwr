@@ -1,7 +1,8 @@
-#lang racket
+#lang racket/base
 (provide generate-entries)
 
-#; (require net/sendurl)
+(require racket/list)
+(require racket/string)
 
 ;;;; Work in progress | TODO: Rewrite this from scratch
 ;;; An "entry" is a selector within a menu that is stylised before being
