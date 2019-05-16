@@ -9,11 +9,15 @@
    [[https://user-images.githubusercontent.com/591669/53056574-d4312f80-34bc-11e9-931e-1f1299500321.png]]
 
 ** How to use
-   ~racket src/main.rkt~
+   ~% racket src/main.rkt~
 
 *** Work in progress
     + TLS support
     + Clickable directory links
+    + Binary files
+      + Download binaries
+      + Render images
+        + Inline images in menus (maybe)
 
 *** Wishlist
     + Keyboard shortcuts
@@ -22,7 +26,3 @@
     + Themes
       + Font settings
       + Customisable colours
-    + Binary files
-      + Download binaries
-      + Render images
-        + Inline images in menus
