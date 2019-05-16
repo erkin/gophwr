@@ -23,7 +23,9 @@
   (define (read-loop in lines)
     (let ((line (read-line in 'return-linefeed)))
       (if (or (eof-object? line) (string=? line "."))
-          lines
+          (begin
+           (close-input-port in)
+           lines)
           (read-loop in (append lines (list line))))))
   (read-loop in '()))
 
@@ -95,13 +97,17 @@
             (generate-entries (read-lines in)))
            ((#\0 #\m #\M #\p #\x)
             (string-join (read-lines in) "\n"))
-           ((#\g #\I)
-            "Can't handle images right now.")
+           ((#\g)
+            ;; Try to render it.
+            (port->bytes in))
+           ((#\I)
+            ;; Determine file type and try to render it.
+            (port->bytes in))
            ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
-            "Can't handle binary files right now.")
+            ;; Save the file.
+            (port->bytes in))
            (else
             "File type unrecognised."))))
-    (close-input-port in)
     (if (non-empty-string? result)
         result
         (error-string "The server returned nothing."))))
