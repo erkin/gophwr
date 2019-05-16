@@ -13,7 +13,7 @@
 (define previous-address '())
 (define next-address '())
 ;;; Thread for TCP connection (see gopher.rkt)
-(define dial-custodian #f)
+(define thread-custodian #f)
 
 
 ;;; Main window
@@ -54,9 +54,9 @@
   (new menu-item% (parent file-menu)
        (label "&Stop")
        (callback (λ _
-                   (custodian-shutdown-all dial-custodian)
+                   (custodian-shutdown-all thread-custodian)
                    (loaded)
-                   (send frame set-status-text "Stopped!"))))
+                   (send frame set-status-text "\U26A0 Stopped!"))))
   ;; Save page to file.
   ;; Note that this saves the formatted version of menus.
   (new menu-item% (parent file-menu)
@@ -211,9 +211,9 @@
       ;; stripped out.
       (set! address urn))
     ;; Start the thread to dial the address and render the page.
-    (set! dial-custodian (make-custodian (current-custodian)))
+    (set! thread-custodian (make-custodian (current-custodian)))
     (thread (λ ()
-              (current-custodian dial-custodian)
+              (current-custodian thread-custodian)
               (loading urn)
               (send page-text insert (get-page urn))
               (loaded)))))

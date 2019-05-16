@@ -49,13 +49,13 @@
     ((#\0 #\7 #\m #\M #\p #\x)
      (string-join (port->lines in #:line-mode 'return-linefeed) "\n"))
     ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
-     ;; Save the file.
+     ;; TODO: Save the file.
      (port->bytes in))
     ((#\g)
-     ;; Try to render the GIF.
+     ;; TODO: Try to render the GIF.
      (port->bytes in))
     ((#\I)
-     ;; Determine image type and try to render it.
+     ;; TODO: Determine image type and try to render it.
      (port->bytes in))
     (else
      "File type not recognised.")))
@@ -81,8 +81,8 @@
         (error-string "The server returned nothing."))))
 
 (define (get-page address)
+  ;; format: (address domain :port /type/path type /path)
   (let ((urn (regexp-match magic-regexp address)))
-    ;; (address domain :port /type/path type /path)
     ;; "foo.bar:69/0/baz/quux" becomes:
     ;;   '("foo.bar:69/0/baz/quux" "foo.bar" ":69"
     ;;     "/0/baz/quux" "0" "/baz/quux")
@@ -98,8 +98,9 @@
                (string->number (substring port 1))
                ;; Fall back to 70 by default.
                70)
-           ;; Fall back to / by default, which is the main menu.
+           ;; Fall back to an empty selector by default, which is the
+           ;; top-level directory.
            (string->char (or type "1"))
-           (or path "/")))
+           (or path "")))
         ;; Return an error if the address is not valid.
         (error-string "Invalid path: " address))))
