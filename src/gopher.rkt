@@ -39,7 +39,6 @@
   ;; Domain probably doesn't work with IPv6 right now.
   ;; Port and path are optional.
   ;; File type is mandatory if there's a path.
-  ;; Final '/' must be trimmed out.
   (regexp
    (string-append
     "^"                ; Regexp begins here
@@ -47,14 +46,13 @@
       "(:[0-9]+)?"     ; Port
       "(/"             ; Path begins here
         "([^/])"       ; Single character file type
-          "(/[^?#]*)*" ; Rest of the path
-      ")?"             ; Path ends here
+        "(/[^?#]*)*"   ; Rest of the path
+      ")?/?"           ; Path ends here
     "$"                ; Regexp ends here
     )))
 
 (define (get-page address)
-  (let ((urn (regexp-match magic-regexp
-                           (string-trim address "/" #:repeat? #t))))
+  (let ((urn (regexp-match magic-regexp address)))
     ;; (address domain :port /type/path type /path)
     ;; "foo.bar:69/0/baz/quux" becomes:
     ;;   '("foo.bar:69/0/baz/quux" "foo.bar" ":69"
