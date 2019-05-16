@@ -51,7 +51,7 @@
           (("h")
            (if (and (> (string-length (second entry)) 4)
                     (string=? "URL:" (substring (second entry) 0 4)))
-               (++ "[web] " text " -> "
+               (++ "[web] " text " → "
                    (substring (second entry) 4))
                (++ "[html] " text " | " location)))
           ;; I guess we need an image viewer.
