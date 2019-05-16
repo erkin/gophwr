@@ -32,13 +32,15 @@
           ;; Messages are displayed outright.
           (("i")
            ;; Titles should be bold.
-           (if (string=? (second entry) "TITLE")
-               (++ "Page title: " text)
+           (++ (if (string=? (second entry) "TITLE")
+                   "TITLE "
+                   ;; Prepend some space to align with menu items.
+                   (make-string 6 #\space))
                text))
           ;; Errors are like messages but should be displayed
           ;; in red or something.
           (("3")
-           (++ "Error: " text))
+           (++ "ERROR " text))
           ;; Text files should be rendered properly.
           (("0")
            (++ "[txt] " text " | " location))
