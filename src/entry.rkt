@@ -25,9 +25,9 @@
              (text (first entry))
              (location ; address : port / type / location
               (++
-               (third entry) ":" (fourth entry)
+               (third entry) ":" (fourth entry) "/"
                (if (non-empty-string? type) type "1")
-               "/" (second entry))))
+               (second entry))))
         (case type
           ;; Messages are displayed outright.
           (("i")

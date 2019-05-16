@@ -166,11 +166,11 @@
   (begin-busy-cursor))
 
 (define (loaded)
-  (send page-text scroll-to-position 0)
   (send frame set-status-text "")
   (send frame set-label
         (string-append *project-name*
                        " \u2014 " address))
+  (send page-text scroll-to-position 0)
   (end-busy-cursor))
 
 
