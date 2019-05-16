@@ -1,6 +1,9 @@
 * gophwr v0.2
   A graphical gopher browser in =racket/gui=.
 
+** How to use
+   ~% racket src/main.rkt~
+
 ** Status
    This project is still under construction and is barely functional.
    Patches welcome.
@@ -8,16 +11,12 @@
    #+CAPTION: The way it looks as of v0.1.3
    [[https://user-images.githubusercontent.com/591669/53056574-d4312f80-34bc-11e9-931e-1f1299500321.png]]
 
-** How to use
-   ~% racket src/main.rkt~
-
 *** Work in progress
     + TLS support
     + Clickable directory links
     + Binary files
       + Download binaries
       + Render images
-        + Inline images in menus (maybe)
 
 *** Wishlist
     + Keyboard shortcuts
