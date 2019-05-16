@@ -72,12 +72,13 @@
   ;; Request the desired path.
   (write-line path out)
   (flush-output out)
-  (close-output-port out)
   ;; Do something with the input port based on the type of the file
   ;; we're expecting.
   (let ((result (read-input in type)))
     (if (or (non-empty-string? result) (bytes? result))
-        result
+        (begin
+          (close-output-port out)
+          result)
         (error-string "The server returned nothing."))))
 
 (define (get-page address)
