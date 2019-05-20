@@ -1,9 +1,8 @@
 #lang racket
-(provide get-page)
+(provide get-file)
 
 (require "config.rkt")
 (require "const.rkt")
-(require "entry.rkt")
 
 (require racket/tcp)
 (require openssl)
@@ -34,40 +33,42 @@
 (define string->char
   (compose car string->list))
 
-;;; \r\n is mandatory in Gopher
+;;; \r\n is mandatory in Gopher.
 (define (write-line str out)
   (display (string-append str "\r\n") out))
 
 ;; To let the user know the error comes from the client, not the server.
 (define (error-string . strs)
-  (string-append* *project-name* " error: " strs))
+  (cons 'error string))
 
+;; Return a pair of file type and contents.
 (define (read-input in type)
   (case type
     ((#\1)
-     (generate-entries (port->lines in #:line-mode 'return-linefeed)))
+     (cons 'menu (port->lines in #:line-mode 'return-linefeed)))
     ((#\0 #\7 #\m #\M #\p #\x)
-     (string-join (port->lines in #:line-mode 'return-linefeed) "\n"))
+     (cons 'text (port->lines in #:line-mode 'return-linefeed)))
     ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
      ;; TODO: Save the file.
-     (port->bytes in))
+     (cons 'binary (port->bytes in)))
     ((#\g)
      ;; TODO: Try to render the GIF.
-     (port->bytes in))
+     (cons 'gif (port->bytes in)))
     ((#\I)
      ;; TODO: Determine image type and try to render it.
-     (port->bytes in))
+     (cons 'image (port->bytes in)))
     (else
-     "File type not recognised.")))
+     (close-input-port in)
+     (error-string "File type not recognised."))))
 
 (define (connect-server host port type path)
   (define-values (in out)
     ;; Try to connect with SSL if it's enabled.
     ;; Doesn't work reliably.
     ;; TODO: Add back the fallback mechanism.
-    ((if *tls-enabled?*
-         ssl-connect
-         tcp-connect)
+    ((if (and *tls-enabled?* ssl-available?)
+         ssl-connect/enable-break
+         tcp-connect/enable-break)
      host port))
   ;; Request the desired path.
   (write-line path out)
@@ -81,7 +82,7 @@
           result)
         (error-string "The server returned nothing."))))
 
-(define (get-page address)
+(define (get-file address)
   ;; format: (address domain :port /type/path type /path)
   (let ((urn (regexp-match magic-regexp address)))
     ;; "foo.bar:69/0/baz/quux" becomes:
@@ -104,4 +105,4 @@
            (string->char (or type "1"))
            (or path "")))
         ;; Return an error if the address is not valid.
-        (error-string "Invalid path: " address))))
+        (error-string (string-append "Invalid path: " address)))))

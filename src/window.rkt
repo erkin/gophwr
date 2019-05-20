@@ -12,9 +12,6 @@
 ;;; Pseudostacks that hold previous and next addresses
 (define previous-address '())
 (define next-address '())
-;;; Thread for TCP connection (see gopher.rkt)
-(define thread-custodian #f)
-
 
 ;;; Main window
 (define frame
@@ -45,18 +42,6 @@
        (label "&Help")))
 
 (define (populate-menu-bar)
-  ;; Navigate to the currently loaded address
-  (new menu-item% (parent file-menu)
-       (label "&Refresh")
-       (callback (λ _
-                   (refresh))))
-  ;; Gracefully shutdown the thread.
-  (new menu-item% (parent file-menu)
-       (label "&Stop")
-       (callback (λ _
-                   (custodian-shutdown-all thread-custodian)
-                   (loaded)
-                   (send frame set-status-text "\U26A0 Stopped!"))))
   ;; Save page to file.
   ;; Note that this saves the formatted version of menus.
   (new menu-item% (parent file-menu)
@@ -95,6 +80,11 @@
   (new button% (parent address-pane)
        (label "\u2398")
        (callback (λ _ (go-forward)))))
+
+(define refresh-key
+  (new button% (parent address-pane)
+       (label "\u21bb")
+       (callback (λ _ (refresh)))))
 
 (define home-key
   (new button% (parent address-pane)
@@ -161,8 +151,10 @@
 
 (define (loading urn)
   (send frame set-status-text
-        (string-append "Loading " urn " \u231B")) ; hourglass
+        (string-append "Loading " urn " \u231b")) ; hourglass
   (send address-field set-value urn)
+  (send page-text begin-edit-sequence)
+  (send page-canvas enable #f)
   (begin-busy-cursor))
 
 (define (loaded)
@@ -171,6 +163,9 @@
         (string-append *project-name*
                        " \u2014 " address))
   (send page-text scroll-to-position 0)
+  (when (send page-text in-edit-sequence?)
+    (send page-text end-edit-sequence))
+  (send page-canvas enable #t)
   (end-busy-cursor))
 
 
@@ -211,9 +206,7 @@
       ;; stripped out.
       (set! address urn))
     ;; Start the thread to dial the address and render the page.
-    (set! thread-custodian (make-custodian (current-custodian)))
     (thread (λ ()
-              (current-custodian thread-custodian)
               (loading urn)
-              (send page-text insert (get-page urn))
+              (render-file page-text (get-file urn))
               (loaded)))))
