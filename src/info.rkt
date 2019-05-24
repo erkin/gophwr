@@ -1,10 +1,9 @@
 #lang info
 (define collection "gophwr")
-(define deps '("base" "gui-lib"))
+(define deps '("base" "gui-lib" "openssl"))
 (define build-deps '())
-(define pkg-desc "A graphical gopher browser in racket/gui using framework.")
-(define version "0.0")
+(define pkg-desc "A graphical gopher browser in Racket")
+(define version "0.3")
 (define pkg-authors '(erkin))
-(define racket-launcher-names '("gophwr"))
-(define racket-launcher-libraries '("main.rkt"))
-
+(define gracket-launcher-names '("gophwr"))
+(define gracket-launcher-libraries '("main.rkt"))

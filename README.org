@@ -12,15 +12,15 @@
    [[https://user-images.githubusercontent.com/591669/57890580-c4698300-7840-11e9-93f0-51909e38c8ae.png]]
 
 *** Work in progress
-    + TLS support
     + Clickable directory links
-    + Binary files
-      + Render images
-
-*** Up next
-    + Keyboard shortcuts
-    + Bookmarks
-    + Tabbed browsing
+      + Mouseover links
+    + TLS support
     + Themes
       + Font settings
       + Customisable colours
+
+*** Up next
+    + Render images
+    + Keyboard shortcuts
+    + Bookmarks
+    + Tabbed navigation
