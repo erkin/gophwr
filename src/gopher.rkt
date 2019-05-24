@@ -27,7 +27,7 @@
     ;; TODO: Cleanup, better error handling.
     (case type
       ((text) (let ((result (port->lines in #:line-mode 'return-linefeed)))
-                (if (non-empty-string? (first result))
+                (if (> (length result) 1)
                     (begin
                       (close-output-port out)
                       ;; Drop "." at the end.

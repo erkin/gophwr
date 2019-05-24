@@ -52,6 +52,7 @@
 
 
 (define (render-text page content go-to)
+  (send page change-style d-usual)
   (for-each (λ (line)
               (send* page (insert line) (insert "\n")))
             content))
@@ -121,11 +122,11 @@
                              (message-box
                               "Unimplemented"
                               "Queries are not yet implemented."))
-               "???"))
+               #:decorator "???"))
              (("g" "I")
-              (insert-selector d-download text "img"))
+              (insert-selector d-download text click #:decorator "img"))
              (("4" "5" "6" "9" "c" "d" "e" "s" ";")
-              (insert-selector d-download text "bin"))
+              (insert-selector d-download text click #:decorator "bin"))
              (else
               (insert-text d-usual text))))))
      content)))
