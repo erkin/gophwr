@@ -135,7 +135,6 @@
   (populate-menu-bar)
 
   (send* *theme*
-    (set-face *font*)
     (set-delta-foreground *fg-colour*)
     (set-delta-background *bg-colour*))
   (send* page-text

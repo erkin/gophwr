@@ -2,13 +2,17 @@
 (provide render-menu render-text
          save-binary)
 
+(require "config.rkt")
 
-;;; TODO: Add theming
+
+(define (parse-selector line)
+  (let ((selectors (regexp-match "^(.)(.*)\t(.*)\t(.*)\t(.*)$" line)))
+    (if selectors
+        (apply values (cdr selectors))
+        (raise-user-error (string-append "Invalid selector: " line)))))
+
 (define (render-text page content)
   (for-each (λ (line) (send page insert line)) content))
-
-(define (render-menu page content)
-  (for-each (λ (line) (send page insert (generate-entry line))) content))
 
 (define (save-binary content)
   (let ((file-path (put-file)))
@@ -18,66 +22,84 @@
         (write-bytes-avail/enable-break content output-file)
         (close-output-port output-file)))))
 
-(define (generate-entry line)
-  ;; Don't bother preparing an entry if it's not a real menu item.
-  ;; I sure hope this ordinary line doesn't contain a tab character.
-  (if (string-contains? line "\t")
-      (let* ((++ string-append)
-             ;; Strings must be untrimmed to accommodate for blank i lines.
-             (entry (string-split (substring line 1) "\t" #:trim? #f))
-             (type (substring line 0 1))
-             (text (first entry))
-             (location ; address : port / type / location
-              (++
-               (third entry) ":" (fourth entry) "/"
-               (if (non-empty-string? type) type "1")
-               (second entry) "\n")))
-        (case type
-          ;; Messages are displayed outright.
-          (("i")
-           ;; Titles should be bold.
-           (++ (if (string=? (second entry) "TITLE")
-                   "TITLE "
-                   ;; Prepend some space to align with menu items.
-                   (make-string 6 #\space))
-               text "\n"))
-          ;; Errors are like messages but should be displayed
-          ;; in red or something.
-          (("3")
-           (++ "ERROR " text "\n"))
-          ;; Text files should be rendered properly.
-          (("0")
-           (++ "[txt] " text " | " location))
-          ;; Directories should be clickable and navigable.
-          (("1")
-           (++ "[dir] " text " | " location))
-          ;; Web pages should be handled through send-url.
-          (("h")
-           (if (and (> (string-length (second entry)) 4)
-                    (string=? "URL:" (substring (second entry) 0 4)))
-               (++ "[web] " text " → "
-                   (substring (second entry) 4) "\n")
-               (++ "[htm] " text " | " location)))
-          ;; I guess we need an image viewer.
-          (("g" "I")
-           (++ "[img] " text " | " location))
-          ;; Binary files shouldn't be rendered in the browser
-          ;; but downloaded directly.
-          (("4" "5" "6" "9" "c" "d" "e" "s" ";")
-           (++ "[bin] " text " | " location))
-          ;; Input string for query.
-          (("7")
-           (++ "QUERY  " text " | " location))
-          ;; Duplicate entries.
-          (("+")
-           (++ "[dup] " text " | " location))
-          ;; I honestly have no idea how to handle telnet entries.
-          (("T" "8")
-           (++ "[tel] " text " | " location))
-          ;; Nor CSO phonebook entries.
-          (("2")
-           (++ "[pbx] " text " | " location))
-          (else
-           (++ "Unrecognised type: " type " (" text ")\n"))))
-      ;; Return line on its own if it's not an entry for some reason.
-      (string-append line "\n")))
+(define (render-menu page content)
+  (let* ((++ string-append)
+         (d-usual (make-object style-delta%))
+         (d-menu (make-object style-delta%))
+         (d-error (make-object style-delta%))
+         (d-title (make-object style-delta%))
+         (d-link (make-object style-delta%))
+         (d-download (make-object style-delta%))
+         (d-document (make-object style-delta%))
+         (insert-text (λ (style str)
+                        (send* page
+                          (change-style style)
+                          (insert str))))
+         (insert-line (λ (style str)
+                        (insert-text style str)
+                        (send page insert "\n")))
+         (insert-selector (λ (style str decorator)
+                            (insert-text d-usual (++ "[" decorator "] "))
+                            (insert-line style str)))
+         (insert-justified (λ (style str)
+                             (insert-text d-usual (make-string 6 #\space))
+                             (insert-line style str))))
+
+    (send* d-usual
+      (set-family 'modern)
+      (set-delta 'change-weight 'normal)
+      (set-delta-foreground *fg-colour*)
+      (set-delta-background *bg-colour*))
+    (send* d-title
+      (copy d-usual)
+      (set-delta 'change-weight 'bold))
+    (send* d-error
+      (copy d-usual)
+      (set-delta-foreground *error-colour*))
+    ;; Menus we can navigate to
+    (send* d-menu
+      (copy d-usual)
+      (set-delta-foreground *menu-colour*))
+    ;; Outgoing (web) links
+    (send* d-link
+      (copy d-usual)
+      (set-delta-foreground *link-colour*))
+    ;; Links to text files we can render
+    (send* d-document
+      (copy d-usual)
+      (set-delta-foreground *document-colour*))
+    ;; Binary files we can download
+    (send* d-download
+      (copy d-usual)
+      (set-delta-foreground *download-colour*))
+    
+    (for-each
+     (λ (line)
+       (let-values (((type text path domain port) (parse-selector line)))
+         (case type
+           (("i") (if (string=? path "TITLE")
+                      (insert-line d-title text)
+                      (insert-justified d-usual text)))
+           (("1")
+            (insert-justified d-menu text))
+           (("3")
+            (insert-justified d-error text))
+           (("0")
+            (insert-selector d-document text "txt"))
+           (("+")
+            (insert-selector d-menu text "dup"))
+           (("h")
+            (if (and (> (string-length path) 4)
+                     (string=? "URL:" (substring path 0 4)))
+                (insert-selector d-link text "www")
+                (insert-selector d-document text "htm")))
+           (("7")
+            (insert-selector d-menu text "???"))
+           (("g" "I")
+            (insert-selector d-download text "img"))
+           (("4" "5" "6" "9" "c" "d" "e" "s" ";")
+            (insert-selector d-download text "bin"))
+           (else (insert-text d-usual text)))))
+     content)))
+
+

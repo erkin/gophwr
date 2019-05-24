@@ -30,7 +30,8 @@
                 (if (non-empty-string? (first result))
                     (begin
                       (close-output-port out)
-                      result)
+                      ;; Drop "." at the end.
+                      (drop-right result 1))
                     (raise-user-error "Server returned no lines."))))
       ((binary) (let ((result (port->bytes in)))
                   (if (bytes? result)
