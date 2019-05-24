@@ -1,4 +1,4 @@
-* gophwr v0.2
+* gophwr v0.3
   A graphical gopher browser in =racket/gui=.
 
 ** How to use
