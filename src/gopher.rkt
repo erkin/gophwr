@@ -27,11 +27,10 @@
     ;; TODO: Cleanup, better error handling.
     (case type
       ((text) (let ((result (port->lines in #:line-mode 'return-linefeed)))
-                (if (> (length result) 1)
+                (if result
                     (begin
                       (close-output-port out)
-                      ;; Drop "." at the end.
-                      (drop-right result 1))
+                      result)
                     (raise-user-error "Server returned no lines."))))
       ((binary) (let ((result (port->bytes in)))
                   (if (bytes? result)

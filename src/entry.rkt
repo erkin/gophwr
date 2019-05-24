@@ -90,43 +90,45 @@
                 (insert "\n"))))))
     (for-each
      (λ (line)
-       (let-values (((type text path domain port)
-                     (parse-selector line)))
-         (let ((click (λ _ (go-to (string-append domain ":" port "/" type path)))))
-           (case type
-             (("i")
-              (if (string=? path "TITLE")
-                  (insert-text d-title text)
-                  (insert-text d-usual (string-append
-                                        (make-string 6 #\space) text)))
-              (send page insert "\n"))
-             (("1")
-              (insert-selector d-menu text click #:justified? #t))
-             (("3")
-              (send page insert (make-string 6 #\space))
-              (insert-text d-error text))
-             (("0")
-              (insert-selector d-document text click #:decorator "txt"))
-             (("+")
-              (insert-selector d-menu text click #:decorator "dup"))
-             (("h")
-              (if (and (> (string-length path) 4)
-                       (string=? "URL:" (substring path 0 4)))
-                  (insert-selector d-link text
-                                   (λ _ (send-url (substring path 4)))
-                                   #:decorator "url")
-                  (insert-selector d-document text click "htm")))
-             (("7")
-              (insert-selector
-               d-menu text (λ _
-                             (message-box
-                              "Unimplemented"
-                              "Queries are not yet implemented."))
-               #:decorator "???"))
-             (("g" "I")
-              (insert-selector d-download text click #:decorator "img"))
-             (("4" "5" "6" "9" "c" "d" "e" "s" ";")
-              (insert-selector d-download text click #:decorator "bin"))
-             (else
-              (insert-text d-usual text))))))
+       ;; Pesky end-of-file dot...
+       (unless (string=? line ".")
+         (let-values (((type text path domain port)
+                       (parse-selector line)))
+           (let ((click (λ _ (go-to (string-append domain ":" port "/" type path)))))
+             (case type
+               (("i")
+                (if (string=? path "TITLE")
+                    (insert-text d-title text)
+                    (insert-text d-usual (string-append
+                                          (make-string 6 #\space) text)))
+                (send page insert "\n"))
+               (("1")
+                (insert-selector d-menu text click #:justified? #t))
+               (("3")
+                (send page insert (make-string 6 #\space))
+                (insert-text d-error text))
+               (("0")
+                (insert-selector d-document text click #:decorator "txt"))
+               (("+")
+                (insert-selector d-menu text click #:decorator "dup"))
+               (("h")
+                (if (and (> (string-length path) 4)
+                         (string=? "URL:" (substring path 0 4)))
+                    (insert-selector d-link text
+                                     (λ _ (send-url (substring path 4)))
+                                     #:decorator "url")
+                    (insert-selector d-document text click "htm")))
+               (("7")
+                (insert-selector
+                 d-menu text (λ _
+                               (message-box
+                                "Unimplemented"
+                                "Queries are not yet implemented."))
+                 #:decorator "???"))
+               (("g" "I")
+                (insert-selector d-download text click #:decorator "img"))
+               (("4" "5" "6" "9" "c" "d" "e" "s" ";")
+                (insert-selector d-download text click #:decorator "bin"))
+               (else
+                (insert-text d-usual text)))))))
      content)))
