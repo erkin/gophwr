@@ -7,9 +7,6 @@
          "gopher.rkt"
          "parser.rkt")
 
-(define *theme*
-  (new style-delta%))
-
 ;;; The current page address
 (define address "")
 ;;; Pseudostacks that hold previous and next addresses
@@ -134,7 +131,8 @@
     (set-max-undo-history 0))
   (send* page-canvas
     (set-canvas-background *bg-colour*)
-    (set-editor page-text))
+    (set-editor page-text)
+    (lazy-refresh #t))
 
   ;; Here we go!
   (send frame create-status-line)
@@ -179,7 +177,8 @@
 
 (define (go-back)
   ;; Note that previous-address contains the current address as well.
-  (when (> (length previous-address) 1)
+  (unless (or (send page-text in-edit-sequence?)
+              (< (length previous-address) 2))
     (set! next-address (cons address next-address))
     (let ((prev (cadr previous-address)))
       (set! previous-address (cddr previous-address))
@@ -187,7 +186,8 @@
       (go-to prev #:history #t))))
 
 (define (go-forward)
-  (unless (null? next-address)
+  (unless (or (send page-text in-edit-sequence?)
+              (null? next-address))
     (let ((next (car next-address)))
       (set! next-address (cdr next-address))
       (go-to next #:history #t))))
@@ -196,29 +196,30 @@
   (go-to (send address-field get-value)))
 
 (define (go-to uri #:history (history #f))
-  (let-values
-      (((urn domain port type path)
-        ;; Strip out URL scheme from the address.
-        (parse-urn (string-trim
-                    (if (and (> (string-length uri) 8)
-                             (string=? (substring uri 0 9) "gopher://"))
-                        (substring uri 9)
-                        uri) #:repeat? #t))))
-    ;; Do nothing if the address is blank.
-    (when (non-empty-string? urn)
-      (case type
-        ((#\0 #\1 #\7 #\m #\M #\p #\x)
-         ;; Don't discard the next address stack if we're moving back
-         ;; and forth.
-         (unless history
-           (set! next-address '()))
-         (to-text urn domain port type path))
-        ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
-         (to-binary urn domain port type path))
-        ((#\g #\I)
-         (to-image urn domain port type path))
-        (else
-         (error-page "File type not recognised."))))))
+  (unless (send page-text in-edit-sequence?)
+   (let-values
+       (((urn domain port type path)
+         ;; Strip out URL scheme from the address.
+         (parse-urn (string-trim
+                     (if (and (> (string-length uri) 8)
+                              (string=? (substring uri 0 9) "gopher://"))
+                         (substring uri 9)
+                         uri) #:repeat? #t))))
+     ;; Do nothing if the address is blank.
+     (when (non-empty-string? urn)
+       (case type
+         ((#\0 #\1 #\7 #\m #\M #\p #\x)
+          ;; Don't discard the next address stack if we're moving back
+          ;; and forth.
+          (unless history
+            (set! next-address '()))
+          (to-text urn domain port type path))
+         ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
+          (to-binary urn domain port type path))
+         ((#\g #\I)
+          (to-image urn domain port type path))
+         (else
+          (error-page "File type not recognised.")))))))
 
 (define (to-text urn domain port type path)
   (clear-page)
@@ -230,9 +231,10 @@
     (when (or (null? previous-address)
             (not (string=? address (car previous-address))))
       (set! previous-address (cons address previous-address))))
+
+  (loading urn)
   ;; Start the thread to dial the address and render the menu.
   (thread (λ ()
-            (loading urn)
             ((if (char=? type #\1)
                  render-menu
                  render-text)
@@ -241,8 +243,8 @@
             (loaded))))
 
 (define (to-binary urn domain port type path)
+  (loading urn)
   (thread (λ ()
-            (loading urn)
             (save-binary (fetch-file domain port path #:type 'binary))
             (loaded))))
 
