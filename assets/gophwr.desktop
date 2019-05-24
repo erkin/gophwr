@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=0.3
+Name=gophwr
+GenericName=Gopher Client
+Comment=Browse the Gopherspace
+Keywords=Internet;Browser;Explorer
+Exec=gophwr %u
+Icon=
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+MimeType=x-scheme-handler/gopher;
+StartupNotify=true
+StartupWMClass=gophwr
+Categories=Network;
