@@ -183,17 +183,19 @@
     (set! next-address (cons address next-address))
     (let ((prev (cadr previous-address)))
       (set! previous-address (cddr previous-address))
-      (go-to prev))))
+      ;; To make sure the forward stack isn't munged.
+      (go-to prev #:history #t))))
 
 (define (go-forward)
   (unless (null? next-address)
-    (go-to (car next-address))
-    (set! next-address (cdr next-address))))
+    (let ((next (car next-address)))
+      (set! next-address (cdr next-address))
+      (go-to next #:history #t))))
 
 (define (go)
   (go-to (send address-field get-value)))
 
-(define (go-to uri)
+(define (go-to uri #:history (history #f))
   (let-values
       (((urn domain port type path)
         ;; Strip out URL scheme from the address.
@@ -206,6 +208,10 @@
     (when (non-empty-string? urn)
       (case type
         ((#\0 #\1 #\7 #\m #\M #\p #\x)
+         ;; Don't discard the next address stack if we're moving back
+         ;; and forth.
+         (unless history
+           (set! next-address '()))
          (to-text urn domain port type path))
         ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
          (to-binary urn domain port type path))
