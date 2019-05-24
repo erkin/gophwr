@@ -7,6 +7,8 @@
          "gopher.rkt"
          "parser.rkt")
 
+(define *theme*
+  (new style-delta%))
 
 ;;; The current page address
 (define address "")
@@ -29,14 +31,6 @@
 (define file-menu
   (new menu% (parent menu-bar)
        (label "&File")))
-
-;; (define edit-menu
-;;   (new menu% (parent menu-bar)
-;;        (label "&Edit")))
-
-;; (define view-menu
-;;   (new menu% (parent menu-bar)
-;;        (label "&View")))
 
 (define help-menu
   (new menu% (parent menu-bar)
@@ -132,13 +126,11 @@
      (loaded)
      (error-page str)))
 
+  (initialise-styles)
   (populate-menu-bar)
 
-  (send* *theme*
-    (set-delta-foreground *fg-colour*)
-    (set-delta-background *bg-colour*))
   (send* page-text
-    (change-style *theme*)
+    (change-style d-usual)
     (set-max-undo-history 0))
   (send* page-canvas
     (set-canvas-background *bg-colour*)

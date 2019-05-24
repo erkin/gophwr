@@ -12,9 +12,6 @@
 (define *initial-width* 1024)
 (define *initial-height* 768)
 
-(define *theme*
-  (new style-delta%))
-
 (define *fg-colour*
   (make-object color% #xEE #xEE #xEE))
 (define *bg-colour*
@@ -24,13 +21,11 @@
 (define *error-colour*
   (make-object color% #xEE #xAA #xAA))
 (define *link-colour*
-  (make-object color% #xEE #xAA #xAA))
+  (make-object color% #xAA #xEE #xAA))
 (define *document-colour*
   (make-object color% #xEE #xEE #xAA))
 (define *download-colour*
   (make-object color% #xEE #xAA #xEE))
-
-(define *font* "Unifont")
 
 ;;; EXPERIMENTAL - DOESN'T WORK
 (define *tls-enabled?* #f)

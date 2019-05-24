@@ -1,8 +1,46 @@
 #lang racket/gui
 (provide render-menu render-text
-         save-binary)
+         save-binary initialise-styles
+         d-usual)
 
 (require "config.rkt")
+
+(define d-usual (make-object style-delta%))
+(define d-title (make-object style-delta%))
+(define d-error (make-object style-delta%))
+(define d-menu (make-object style-delta%))
+(define d-link (make-object style-delta%))
+(define d-document (make-object style-delta%))
+(define d-download (make-object style-delta%))
+
+(define (initialise-styles)
+  (send* d-usual
+    (set-family 'modern)
+    (set-delta 'change-weight 'normal)
+    (set-delta-foreground *fg-colour*)
+    (set-delta-background *bg-colour*))
+  (send* d-title
+    (copy d-usual)
+    (set-delta 'change-weight 'bold))
+  (send* d-error
+    (copy d-usual)
+    (set-delta-foreground *error-colour*))
+  ;; Menus we can navigate to
+  (send* d-menu
+    (copy d-usual)
+    (set-delta-foreground *menu-colour*))
+  ;; Outgoing (web) links
+  (send* d-link
+    (copy d-usual)
+    (set-delta-foreground *link-colour*))
+  ;; Links to text files we can render
+  (send* d-document
+    (copy d-usual)
+    (set-delta-foreground *document-colour*))
+  ;; Binary files we can download
+  (send* d-download
+    (copy d-usual)
+    (set-delta-foreground *download-colour*)))
 
 
 (define (parse-selector line)
@@ -12,7 +50,9 @@
         (raise-user-error (string-append "Invalid selector: " line)))))
 
 (define (render-text page content)
-  (for-each (λ (line) (send page insert line)) content))
+  (for-each (λ (line)
+              (send* page (insert line) (insert "\n")))
+            content))
 
 (define (save-binary content)
   (let ((file-path (put-file)))
@@ -23,15 +63,7 @@
         (close-output-port output-file)))))
 
 (define (render-menu page content)
-  (let* ((++ string-append)
-         (d-usual (make-object style-delta%))
-         (d-menu (make-object style-delta%))
-         (d-error (make-object style-delta%))
-         (d-title (make-object style-delta%))
-         (d-link (make-object style-delta%))
-         (d-download (make-object style-delta%))
-         (d-document (make-object style-delta%))
-         (insert-text (λ (style str)
+  (let* ((insert-text (λ (style str)
                         (send* page
                           (change-style style)
                           (insert str))))
@@ -39,43 +71,17 @@
                         (insert-text style str)
                         (send page insert "\n")))
          (insert-selector (λ (style str decorator)
-                            (insert-text d-usual (++ "[" decorator "] "))
+                            (insert-text
+                             d-usual (string-append "[" decorator "] "))
                             (insert-line style str)))
          (insert-justified (λ (style str)
-                             (insert-text d-usual (make-string 6 #\space))
+                             (insert-text
+                              d-usual (make-string 6 #\space))
                              (insert-line style str))))
-
-    (send* d-usual
-      (set-family 'modern)
-      (set-delta 'change-weight 'normal)
-      (set-delta-foreground *fg-colour*)
-      (set-delta-background *bg-colour*))
-    (send* d-title
-      (copy d-usual)
-      (set-delta 'change-weight 'bold))
-    (send* d-error
-      (copy d-usual)
-      (set-delta-foreground *error-colour*))
-    ;; Menus we can navigate to
-    (send* d-menu
-      (copy d-usual)
-      (set-delta-foreground *menu-colour*))
-    ;; Outgoing (web) links
-    (send* d-link
-      (copy d-usual)
-      (set-delta-foreground *link-colour*))
-    ;; Links to text files we can render
-    (send* d-document
-      (copy d-usual)
-      (set-delta-foreground *document-colour*))
-    ;; Binary files we can download
-    (send* d-download
-      (copy d-usual)
-      (set-delta-foreground *download-colour*))
-    
-    (for-each
+(for-each
      (λ (line)
-       (let-values (((type text path domain port) (parse-selector line)))
+       (let-values (((type text path domain port)
+                     (parse-selector line)))
          (case type
            (("i") (if (string=? path "TITLE")
                       (insert-line d-title text)
@@ -91,7 +97,7 @@
            (("h")
             (if (and (> (string-length path) 4)
                      (string=? "URL:" (substring path 0 4)))
-                (insert-selector d-link text "www")
+                (insert-selector d-link text "url")
                 (insert-selector d-document text "htm")))
            (("7")
             (insert-selector d-menu text "???"))
@@ -101,5 +107,3 @@
             (insert-selector d-download text "bin"))
            (else (insert-text d-usual text)))))
      content)))
-
-
