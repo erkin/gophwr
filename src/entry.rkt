@@ -57,7 +57,7 @@
                     (string=? "URL:" (substring (second entry) 0 4)))
                (++ "[web] " text " → "
                    (substring (second entry) 4) "\n")
-               (++ "[html] " text " | " location)))
+               (++ "[htm] " text " | " location)))
           ;; I guess we need an image viewer.
           (("g" "I")
            (++ "[img] " text " | " location))
@@ -67,13 +67,13 @@
            (++ "[bin] " text " | " location))
           ;; Input string for query.
           (("7")
-           (++ "[input] " text " | " location))
+           (++ "QUERY  " text " | " location))
           ;; Duplicate entries.
           (("+")
            (++ "[dup] " text " | " location))
           ;; I honestly have no idea how to handle telnet entries.
           (("T" "8")
-           (++ "[telnet] " text " | " location))
+           (++ "[tel] " text " | " location))
           ;; Nor CSO phonebook entries.
           (("2")
            (++ "[pbx] " text " | " location))
