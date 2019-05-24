@@ -4,7 +4,8 @@
 (require "config.rkt"
          "const.rkt"
          "entry.rkt"
-         "gopher.rkt")
+         "gopher.rkt"
+         "parser.rkt")
 
 
 ;;; The current page address
@@ -169,6 +170,11 @@
   (end-busy-cursor))
 
 
+(define (error-page . strs)
+  (clear-page)
+  (send page-text insert
+        (string-append* *project-name* " error: " strs)))
+
 ;;; Navigation
 (define (refresh)
   (go-to address))
@@ -188,25 +194,48 @@
   (go-to (send address-field get-value)))
 
 (define (go-to uri)
-  (define urn
-    ;; Strip out URL scheme from the address.
-    (if (and (> (string-length uri) 8)
-             (string=? (substring uri 0 9) "gopher://"))
-        (substring uri 9)
-        uri))
-  ;; Wipe the screen, regardless of whether the address is blank.
+  (let-values
+      (((urn domain port type path)
+        ;; Strip out URL scheme from the address.
+        (parse-urn (if (and (> (string-length uri) 8)
+                            (string=? (substring uri 0 9) "gopher://"))
+                       (substring uri 9)
+                       uri))))
+    (if (non-empty-string? urn)
+        (case type
+          ((#\0 #\1 #\7 #\m #\M #\p #\x)
+           (to-text urn domain port type path))
+          ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
+           (to-binary urn domain port type path))
+          ((#\g #\I)
+           (to-image urn domain port type path))
+          (else
+           (error-page "File type not recognised.")))
+        (error-page "Invalid address: " uri))))
+
+(define (to-text urn domain port type path)
   (clear-page)
-  ;; Navigate to the URN if it is not empty.
-  (when (non-empty-string? urn)
-    ;; Update the history stack, omitting duplicate or blank entries
-    (unless (string=? address urn)
-      (when (non-empty-string? address)
-        (set! previous-address (cons address previous-address)))
-      ;; Refresh the global address value, if the URL scheme was
-      ;; stripped out.
-      (set! address urn))
-    ;; Start the thread to dial the address and render the page.
-    (thread (λ ()
-              (loading urn)
-              (render-file page-text (get-file urn))
-              (loaded)))))
+  ;; Update the history stack, omitting duplicate or blank entries
+  (unless (string=? address urn)
+    (when (non-empty-string? address)
+      (set! previous-address (cons address previous-address)))
+    ;; Refresh the global address value, if the URL scheme was
+    ;; stripped out.
+    (set! address urn))
+  ;; Start the thread to dial the address and render the menu.
+  (thread (λ ()
+            (loading urn)
+            ((if (char=? type #\1)
+                 render-menu
+                 render-text)
+             page-text (fetch-file domain port path #:type 'text))
+            (loaded))))
+
+(define (to-binary urn domain port type path)
+  (thread (λ ()
+            (loading urn)
+            (save-binary (fetch-file domain port path #:type 'binary))
+            (loaded))))
+
+;;; TODO: Display the image instead of downloading it.
+(define to-image to-binary)

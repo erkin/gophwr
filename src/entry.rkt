@@ -1,45 +1,22 @@
 #lang racket/gui
-(provide render-file)
+(provide render-menu render-text
+         save-binary)
 
-(define (render-file page fetched-file)
-  (let ((type    (car fetched-file))
-        (content (cdr fetched-file)))
-    (case type
-      ((menu) (render-menu page content))
-      ((text) (render-text page content))
-      ((error) (render-error page content))
-      ((binary) (download-binary content))
-      ((image) (render-image page content))
-      ((gif) (render-gif page content)))))
 
-;;; An "entry" is a selector within a menu that is stylised before being
-;;; inserted into the editor.
-
-;; TODO: everything
-(define (render-menu page content)
-  (for-each (λ (line) (send page insert (generate-entry line)))))
-
+;;; TODO: Add theming
 (define (render-text page content)
   (for-each (λ (line) (send page insert line)) content))
 
-(define (render-error page content)
-  (send page insert content))
+(define (render-menu page content)
+  (for-each (λ (line) (send page insert (generate-entry line))) content))
 
-(define (download-binary content)
+(define (save-binary content)
   (let ((file-path (put-file)))
     (when file-path
       (let ((output-file (open-output-file
                           file-path #:mode 'binary #:exists 'replace)))
         (write-bytes-avail/enable-break content output-file)
         (close-output-port output-file)))))
-
-;; TODO
-(define (render-image page content)
-  (download-binary content))
-
-;; TODO
-(define (render-gif page content)
-  (render-image page content))
 
 (define (generate-entry line)
   ;; Don't bother preparing an entry if it's not a real menu item.
@@ -73,7 +50,7 @@
            (++ "[txt] " text " | " location "\n"))
           ;; Directories should be clickable and navigable.
           (("1")
-           (++ "[dir] " text " | " location "\n"))
+           (++ "[dir] " text " | " location))
           ;; Web pages should be handled through send-url.
           (("h")
            (if (and (> (string-length (second entry)) 4)

@@ -15,7 +15,6 @@
     + TLS support
     + Clickable directory links
     + Binary files
-      + Download binaries
       + Render images
 
 *** Up next
