@@ -47,7 +47,7 @@
            (++ "ERROR " text "\n"))
           ;; Text files should be rendered properly.
           (("0")
-           (++ "[txt] " text " | " location "\n"))
+           (++ "[txt] " text " | " location))
           ;; Directories should be clickable and navigable.
           (("1")
            (++ "[dir] " text " | " location))
@@ -57,26 +57,26 @@
                     (string=? "URL:" (substring (second entry) 0 4)))
                (++ "[web] " text " → "
                    (substring (second entry) 4) "\n")
-               (++ "[html] " text " | " location "\n")))
+               (++ "[html] " text " | " location)))
           ;; I guess we need an image viewer.
           (("g" "I")
-           (++ "[img] " text " | " location "\n"))
+           (++ "[img] " text " | " location))
           ;; Binary files shouldn't be rendered in the browser
           ;; but downloaded directly.
           (("4" "5" "6" "9" "c" "d" "e" "s" ";")
-           (++ "[bin] " text " | " location "\n"))
+           (++ "[bin] " text " | " location))
           ;; Input string for query.
           (("7")
-           (++ "[input] " text " | " location "\n"))
+           (++ "[input] " text " | " location))
           ;; Duplicate entries.
           (("+")
-           (++ "[dup] " text " | " location "\n"))
+           (++ "[dup] " text " | " location))
           ;; I honestly have no idea how to handle telnet entries.
           (("T" "8")
-           (++ "[telnet] " text " | " location "\n"))
+           (++ "[telnet] " text " | " location))
           ;; Nor CSO phonebook entries.
           (("2")
-           (++ "[pbx] " text " | " location "\n"))
+           (++ "[pbx] " text " | " location))
           (else
            (++ "Unrecognised type: " type " (" text ")\n"))))
       ;; Return line on its own if it's not an entry for some reason.
