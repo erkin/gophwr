@@ -178,10 +178,12 @@
   (go-to address))
 
 (define (go-back)
-  (unless (null? previous-address)
+  ;; Note that previous-address contains the current address as well.
+  (when (> (length previous-address) 1)
     (set! next-address (cons address next-address))
-    (go-to (car previous-address))
-    (set! previous-address (cdr previous-address))))
+    (let ((prev (cadr previous-address)))
+      (set! previous-address (cddr previous-address))
+      (go-to prev))))
 
 (define (go-forward)
   (unless (null? next-address)
@@ -214,13 +216,14 @@
 
 (define (to-text urn domain port type path)
   (clear-page)
-  ;; Update the history stack, omitting duplicate or blank entries
   (unless (string=? address urn)
-    (when (non-empty-string? address)
-      (set! previous-address (cons address previous-address)))
-    ;; Refresh the global address value, if the URL scheme was
+    ;; Refresh the global address value, in case URL scheme was
     ;; stripped out.
-    (set! address urn))
+    (set! address urn)
+    ;; Omit duplicate entries.
+    (when (or (null? previous-address)
+            (not (string=? address (car previous-address))))
+      (set! previous-address (cons address previous-address))))
   ;; Start the thread to dial the address and render the menu.
   (thread (λ ()
             (loading urn)
