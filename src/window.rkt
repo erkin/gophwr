@@ -127,6 +127,11 @@
 
 ;;; GUI starts here.
 (define (initialise-window)
+  (error-display-handler
+   (λ (str ex)
+     (loaded)
+     (error-page str)))
+
   (populate-menu-bar)
 
   (send* *theme*
@@ -172,6 +177,8 @@
 
 (define (error-page . strs)
   (clear-page)
+  (loaded)
+  (send frame set-status-text "Error!")
   (send page-text insert
         (string-append* *project-name* " error: " strs)))
 
@@ -201,17 +208,17 @@
                             (string=? (substring uri 0 9) "gopher://"))
                        (substring uri 9)
                        uri))))
-    (if (non-empty-string? urn)
-        (case type
-          ((#\0 #\1 #\7 #\m #\M #\p #\x)
-           (to-text urn domain port type path))
-          ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
-           (to-binary urn domain port type path))
-          ((#\g #\I)
-           (to-image urn domain port type path))
-          (else
-           (error-page "File type not recognised.")))
-        (error-page "Invalid address: " uri))))
+    ;; Do nothing if the address is blank.
+    (when (non-empty-string? urn)
+      (case type
+        ((#\0 #\1 #\7 #\m #\M #\p #\x)
+         (to-text urn domain port type path))
+        ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
+         (to-binary urn domain port type path))
+        ((#\g #\I)
+         (to-image urn domain port type path))
+        (else
+         (error-page "File type not recognised."))))))
 
 (define (to-text urn domain port type path)
   (clear-page)

@@ -12,11 +12,6 @@
 (define (write-line str out)
   (display (string-append str "\r\n") out))
 
-;; To let the user know the error comes from the client, not the server.
-(define (error-string . strs)
-  (string-append* *project-name* " error network: " strs))
-
-
 (define (fetch-file host port path #:type type)
   ;; Try to connect with SSL if it's enabled.
   ;; Doesn't work reliably.
@@ -36,10 +31,10 @@
                     (begin
                       (close-output-port out)
                       result)
-                    (error "Server returned no lines."))))
+                    (raise-user-error "Server returned no lines."))))
       ((binary) (let ((result (port->bytes in)))
                   (if (bytes? result)
                       (begin
                         (close-output-port out)
                         result)
-                      (error "Server returned no bytes.")))))))
+                      (raise-user-error "Server returned no bytes.")))))))

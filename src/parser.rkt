@@ -46,5 +46,5 @@
                    70)
                (string->char (or type "1"))
                (or path "/")))
-        ;; TODO: Gracefully refuse to connect.
-        (error "Invalid address."))))
+        (raise-user-error
+         (string-append "Failed to parse address: " urn)))))
