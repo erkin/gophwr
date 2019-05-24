@@ -12,12 +12,12 @@
    [[https://user-images.githubusercontent.com/591669/57890580-c4698300-7840-11e9-93f0-51909e38c8ae.png]]
 
 *** Work in progress
-    + Clickable directory links
-      + Mouseover links
     + TLS support
     + Themes
       + Font settings
       + Customisable colours
+    + Mouseover links
+    + Queries (=7=)
 
 *** Up next
     + Render images

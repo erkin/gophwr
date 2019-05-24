@@ -3,7 +3,10 @@
          save-binary initialise-styles
          d-usual)
 
-(require "config.rkt")
+(require net/sendurl)
+(require "config.rkt"
+         "parser.rkt")
+
 
 (define d-usual (make-object style-delta%))
 (define d-title (make-object style-delta%))
@@ -12,6 +15,7 @@
 (define d-link (make-object style-delta%))
 (define d-document (make-object style-delta%))
 (define d-download (make-object style-delta%))
+(define d-clicked (make-object style-delta%))
 
 (define (initialise-styles)
   (send* d-usual
@@ -40,16 +44,14 @@
   ;; Binary files we can download
   (send* d-download
     (copy d-usual)
-    (set-delta-foreground *download-colour*)))
+    (set-delta-foreground *download-colour*))
+  ;; Style after click
+  (send* d-clicked
+    (copy d-usual)
+    (set-delta-foreground *clicked-colour*)))
 
 
-(define (parse-selector line)
-  (let ((selectors (regexp-match "^(.)(.*)\t(.*)\t(.*)\t(.*)$" line)))
-    (if selectors
-        (apply values (cdr selectors))
-        (raise-user-error (string-append "Invalid selector: " line)))))
-
-(define (render-text page content)
+(define (render-text page content go-to)
   (for-each (λ (line)
               (send* page (insert line) (insert "\n")))
             content))
@@ -62,48 +64,68 @@
         (write-bytes-avail/enable-break content output-file)
         (close-output-port output-file)))))
 
-(define (render-menu page content)
-  (let* ((insert-text (λ (style str)
-                        (send* page
-                          (change-style style)
-                          (insert str))))
-         (insert-line (λ (style str)
-                        (insert-text style str)
-                        (send page insert "\n")))
-         (insert-selector (λ (style str decorator)
-                            (insert-text
-                             d-usual (string-append "[" decorator "] "))
-                            (insert-line style str)))
-         (insert-justified (λ (style str)
-                             (insert-text
-                              d-usual (make-string 6 #\space))
-                             (insert-line style str))))
-(for-each
+(define (render-menu page content go-to)
+  (let* ((insert-text
+          (λ (style str)
+            (send* page
+              ;; Set the desired style before inserting the text
+              (change-style style)
+              (insert str)
+              ;; Then reset it.
+              (change-style d-usual))))
+         (insert-selector
+          (λ (style str clickback
+                    #:decorator (decorator #f)
+                    #:justified? (justified #f))
+            (when decorator
+              (insert-text d-usual (string-append "[" decorator "] ")))
+            (when justified
+              (send page insert (make-string 6 #\space)))
+            (let ((before (send page get-start-position))
+                  (_ (insert-text style str))
+                  (after (send page get-start-position)))
+              (send* page
+                (set-clickback before after clickback)
+                (insert "\n"))))))
+    (for-each
      (λ (line)
        (let-values (((type text path domain port)
                      (parse-selector line)))
-         (case type
-           (("i") (if (string=? path "TITLE")
-                      (insert-line d-title text)
-                      (insert-justified d-usual text)))
-           (("1")
-            (insert-justified d-menu text))
-           (("3")
-            (insert-justified d-error text))
-           (("0")
-            (insert-selector d-document text "txt"))
-           (("+")
-            (insert-selector d-menu text "dup"))
-           (("h")
-            (if (and (> (string-length path) 4)
-                     (string=? "URL:" (substring path 0 4)))
-                (insert-selector d-link text "url")
-                (insert-selector d-document text "htm")))
-           (("7")
-            (insert-selector d-menu text "???"))
-           (("g" "I")
-            (insert-selector d-download text "img"))
-           (("4" "5" "6" "9" "c" "d" "e" "s" ";")
-            (insert-selector d-download text "bin"))
-           (else (insert-text d-usual text)))))
+         (let ((click (λ _ (go-to (string-append domain ":" port "/" type path)))))
+           (case type
+             (("i")
+              (if (string=? path "TITLE")
+                  (insert-text d-title text)
+                  (insert-text d-usual (string-append
+                                        (make-string 6 #\space) text)))
+              (send page insert "\n"))
+             (("1")
+              (insert-selector d-menu text click #:justified? #t))
+             (("3")
+              (send page insert (make-string 6 #\space))
+              (insert-text d-error text))
+             (("0")
+              (insert-selector d-document text click #:decorator "txt"))
+             (("+")
+              (insert-selector d-menu text click #:decorator "dup"))
+             (("h")
+              (if (and (> (string-length path) 4)
+                       (string=? "URL:" (substring path 0 4)))
+                  (insert-selector d-link text
+                                   (λ _ (send-url (substring path 4)))
+                                   #:decorator "url")
+                  (insert-selector d-document text click "htm")))
+             (("7")
+              (insert-selector
+               d-menu text (λ _
+                             (message-box
+                              "Unimplemented"
+                              "Queries are not yet implemented."))
+               "???"))
+             (("g" "I")
+              (insert-selector d-download text "img"))
+             (("4" "5" "6" "9" "c" "d" "e" "s" ";")
+              (insert-selector d-download text "bin"))
+             (else
+              (insert-text d-usual text))))))
      content)))

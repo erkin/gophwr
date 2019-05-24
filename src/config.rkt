@@ -16,16 +16,19 @@
   (make-object color% #xEE #xEE #xEE))
 (define *bg-colour*
   (make-object color% #x11 #x11 #x11))
+
 (define *menu-colour*
   (make-object color% #xAA #xAA #xEE))
-(define *error-colour*
-  (make-object color% #xEE #xAA #xAA))
 (define *link-colour*
   (make-object color% #xAA #xEE #xAA))
+(define *error-colour*
+  (make-object color% #xEE #xAA #xAA))
 (define *document-colour*
   (make-object color% #xEE #xEE #xAA))
 (define *download-colour*
   (make-object color% #xEE #xAA #xEE))
+(define *clicked-colour*
+  (make-object color% #xAA #xEE #xEE))
 
 ;;; EXPERIMENTAL - DOESN'T WORK
 (define *tls-enabled?* #f)

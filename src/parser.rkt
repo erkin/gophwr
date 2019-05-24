@@ -1,5 +1,5 @@
 #lang racket
-(provide parse-urn)
+(provide parse-urn parse-selector)
 
 
 ;; We're using a simple in-house parser because the official one is too
@@ -22,6 +22,15 @@
     "/?$"            ; Regexp ends here
     )))
 
+(define selector-regexp
+  (regexp
+   (string-append
+    "^(.)"   ; File type (mandatory)
+    "(.*)\t" ; Descriptor text
+    "(.*)\t" ; Path
+    "(.*)\t" ; Address
+    "(.*)$"  ; Port
+    )))
 
 ;; Just a nitpick.
 (define string->char
@@ -36,15 +45,33 @@
     (if parsed-urn
         (match-let-values (((address domain port _ type path)
                          (apply values parsed-urn)))
-       ;; new format: ("address" "domain" port #\type "/path")
-       (values address
-               domain
-               (if port
-                   ;; ":70" -> 70
-                   (string->number (substring port 1))
-                   ;; Fall back to 70 by default.
-                   70)
-               (string->char (or type "1"))
-               (or path "/")))
+          ;; new format: ("address" "domain" port #\type "/path")
+          (values address
+                  domain
+                  (if port
+                      ;; ":70" -> 70
+                      (string->number (substring port 1))
+                      ;; Fall back to 70 by default.
+                      70)
+                  (if type
+                      (string->char type)
+                      #\1)
+                  (or path "/")))
         (raise-user-error
          (string-append "Failed to parse address: " urn)))))
+
+(define (parse-selector line)
+  (let ((parsed-selector (regexp-match selector-regexp line)))
+    (if parsed-selector
+        (match-let-values (((_ type text path address port)
+                            (apply values parsed-selector)))
+          (values type
+                  text
+                  ;; A couple defaults, just in case.
+                  (if (non-empty-string? path)
+                      path "/")
+                  (if (non-empty-string? address)
+                      address "null.host")
+                  (if (non-empty-string? port)
+                      port "70")))
+        (raise-user-error (string-append "Invalid selector: " line)))))

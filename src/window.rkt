@@ -195,10 +195,11 @@
   (let-values
       (((urn domain port type path)
         ;; Strip out URL scheme from the address.
-        (parse-urn (if (and (> (string-length uri) 8)
-                            (string=? (substring uri 0 9) "gopher://"))
-                       (substring uri 9)
-                       uri))))
+        (parse-urn (string-trim
+                    (if (and (> (string-length uri) 8)
+                             (string=? (substring uri 0 9) "gopher://"))
+                        (substring uri 9)
+                        uri) #:repeat? #t))))
     ;; Do nothing if the address is blank.
     (when (non-empty-string? urn)
       (case type
@@ -226,7 +227,8 @@
             ((if (char=? type #\1)
                  render-menu
                  render-text)
-             page-text (fetch-file domain port path #:type 'text))
+             page-text (fetch-file domain port path #:type 'text)
+             go-to)
             (loaded))))
 
 (define (to-binary urn domain port type path)
