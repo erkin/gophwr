@@ -216,7 +216,7 @@
           (to-text urn domain port type path))
          ((#\4 #\5 #\6 #\9 #\c #\d #\e #\s #\;)
           (to-binary urn domain port type path))
-         ((#\g #\I)
+         ((#\g #\I #\p)
           (to-image urn domain port type path))
          (else
           (error-page "File type not recognised.")))))))

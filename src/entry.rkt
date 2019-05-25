@@ -91,7 +91,7 @@
     (for-each
      (λ (line)
        ;; Pesky end-of-file dot...
-       (unless (string=? line ".")
+       (unless (member line '("" "."))
          (let-values (((type text path domain port)
                        (parse-selector line)))
            (let* ((address (string-append domain ":" port "/" type path))
@@ -127,7 +127,7 @@
                      (when query
                        (go-to (string-append address "\t" query)))))
                  #:decorator "???"))
-               (("g" "I")
+               (("g" "I" "p")
                 (insert-selector d-download text click #:decorator "img"))
                (("4" "5" "6" "9" "c" "d" "e" "s" ";")
                 (insert-selector d-download text click #:decorator "bin"))
