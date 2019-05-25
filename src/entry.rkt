@@ -130,5 +130,7 @@
                (("4" "5" "6" "9" "c" "d" "e" "s" ";")
                 (insert-selector d-download text click #:decorator "bin"))
                (else
-                (insert-text d-usual text)))))))
+                (insert-text d-error
+                             (string-append "Unknown selector type: " type))
+                (insert-text d-usual (string-append " " text "\n"))))))))
      content)))
