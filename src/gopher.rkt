@@ -14,8 +14,8 @@
 
 (define (fetch-file host port path #:type type)
   ;; Try to connect with SSL if it's enabled.
-  ;; TODO: Add a fallback mechanism.
   (let-values (((in out)
+                ;; TODO: Fallback to plaintext if TLS handshake fails.
                 ((if (tls-enabled?)
                      ssl-connect/enable-break
                      tcp-connect/enable-break)
@@ -26,7 +26,6 @@
     ;; read. port->bytes and port->lines automatically close their
     ;; respective input ports.
     (flush-output out)
-    ;; TODO: Cleanup, better error handling.
     (case type
       ((text) (let ((result (port->lines in)))
                 (if result

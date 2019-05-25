@@ -37,11 +37,11 @@
          addresses)))
 
   (if (tls-enabled?)
-      (writeln "TLS option enabled.")
+      (displayln "TLS option enabled.")
       (unless ssl-available?
-        (writeln "However, OpenSSL is not available.")
-        (writeln ssl-load-fail-reason)
-        (writeln "Aborting.")
+        (displayln "However, OpenSSL is not available."
+                   ssl-load-fail-reason
+                   "Aborting.")
         (exit 1)))
 
   (initialise-window)

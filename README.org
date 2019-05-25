@@ -12,9 +12,9 @@
    This project is still under construction and is barely functional.
    Patches welcome.
 
-   [[https://user-images.githubusercontent.com/591669/58346065-9a2c4c80-7e62-11e9-9a60-4758bad8b8eb.png]]
+   The way it looks as of v0.3.1:
 
-   The way it looks as of v0.3.1
+   [[https://user-images.githubusercontent.com/591669/58346065-9a2c4c80-7e62-11e9-9a60-4758bad8b8eb.png]]
 
 *** Work in progress
     + TLS support
@@ -30,6 +30,7 @@
     + Tabbed navigation
 
 ** Dependencies
-   Depends on =openssl= module for TLS, although it can be trivially diked out
-   if necessary. =net-lib= is used only for =send-url= (for =h= selectors) and
-   can also be effortlessly removed. Besides these, it's just =gui-lib=.
+   Depends on =lib{crypto,ssl}.{so,dll,dylib}= for TLS, although it can be
+   trivially diked out if necessary. =net-lib= is used only for =send-url=
+   (for =h= selectors) and can also be effortlessly removed. Besides these,
+   it's just =gui-lib=.
