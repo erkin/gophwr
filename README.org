@@ -22,7 +22,6 @@
       + Font settings
       + Customisable colours
     + Mouseover links
-    + Queries (=7= type)
 
 *** Up next
     + Render images
