@@ -63,7 +63,6 @@
 
 (define (parse-selector line)
   (let ((parsed-selector (regexp-match selector-regexp line)))
-    (for-each println parsed-selector)
     (if parsed-selector
         (match-let-values (((_ type text path address port plus)
                             (apply values parsed-selector)))
