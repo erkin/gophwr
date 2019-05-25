@@ -1,6 +1,6 @@
 #lang info
 (define collection "gophwr")
-(define deps '("base" "gui-lib" "openssl" "net-lib"))
+(define deps '("base" "gui-lib" "net-lib"))
 (define build-deps '())
 (define pkg-desc "A graphical gopher browser in Racket")
 (define version "0.3")
