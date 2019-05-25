@@ -26,7 +26,7 @@
     (flush-output out)
     ;; TODO: Cleanup, better error handling.
     (case type
-      ((text) (let ((result (port->lines in #:line-mode 'return-linefeed)))
+      ((text) (let ((result (port->lines in)))
                 (if result
                     (begin
                       (close-output-port out)
