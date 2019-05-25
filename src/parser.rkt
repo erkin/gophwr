@@ -25,11 +25,12 @@
 (define selector-regexp
   (regexp
    (string-append
-    "^(.)"   ; File type (mandatory)
-    "(.*)\t" ; Descriptor text
-    "(.*)\t" ; Path
-    "(.*)\t" ; Address
-    "(.*)$"  ; Port
+    "^([^\t])"   ; File type (mandatory)
+    "([^\t]*)\t" ; Descriptor text
+    "([^\t]*)\t" ; Path
+    "([^\t]*)\t" ; Address
+    "([^\t]*)"   ; Port
+    "(\t\\+)?$"  ; Gopher+
     )))
 
 ;; Just a nitpick.
@@ -62,8 +63,9 @@
 
 (define (parse-selector line)
   (let ((parsed-selector (regexp-match selector-regexp line)))
+    (for-each println parsed-selector)
     (if parsed-selector
-        (match-let-values (((_ type text path address port)
+        (match-let-values (((_ type text path address port plus)
                             (apply values parsed-selector)))
           (values type
                   text
