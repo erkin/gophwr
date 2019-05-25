@@ -3,4 +3,4 @@
 
 with racket2nix;
 
-buildRacketPackage (builtins.path { path = ../src; name = "gophwr"; })
+buildThinRacketPackage (builtins.path { path = ../src; name = "gophwr"; })
