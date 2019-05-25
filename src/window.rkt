@@ -38,8 +38,16 @@
   ;; Note that this saves the formatted version of menus.
   (new menu-item% (parent file-menu)
        (label "&Download")
-       (callback (λ _
-                   (send page-text save-file "" 'text))))
+       (callback
+        (λ _
+          ;; Try to guess the filename.
+          (let ((address-parts (string-split address "/")))
+            (save-file
+             frame
+             (if (> (length address-parts) 2)
+                 (last address-parts) #f)
+             (send page-text get-text)
+             #:mode 'text)))))
   (new menu-item% (parent file-menu)
        (label "&Quit")
        (callback (λ _
@@ -245,7 +253,15 @@
 (define (to-binary urn domain port type path)
   (loading urn)
   (thread (λ ()
-            (save-binary (fetch-file domain port path #:type 'binary))
+            (save-file
+             frame
+             ;; Try to guess the filename.
+             (let ((path-parts (string-split path "/")))
+               (if (null? path-parts)
+                   ""
+                   (last path-parts)))
+             (fetch-file domain port path #:type 'binary)
+             #:mode 'binary)
             (loaded))))
 
 ;;; TODO: Display the image instead of downloading it.

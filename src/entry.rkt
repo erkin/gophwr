@@ -1,6 +1,6 @@
 #lang racket/gui
 (provide render-menu render-text
-         save-binary initialise-styles
+         save-file initialise-styles
          d-usual)
 
 (require net/sendurl)
@@ -57,12 +57,15 @@
               (send* page (insert line) (insert "\n")))
             content))
 
-(define (save-binary content)
-  (let ((file-path (put-file)))
+(define (save-file frame filename content #:mode (mode 'binary))
+  (let ((file-path (put-file "Choose a download location"
+                             frame *download-folder* filename)))
     (when file-path
       (let ((output-file (open-output-file
-                          file-path #:mode 'binary #:exists 'replace)))
-        (write-bytes-avail/enable-break content output-file)
+                          file-path #:mode mode #:exists 'replace)))
+        (if (eq? mode 'binary)
+            (write-bytes-avail/enable-break content output-file)
+            (write-string content output-file))
         (close-output-port output-file)))))
 
 (define (render-menu page content go-to)

@@ -6,6 +6,8 @@
 
 (define *homepage* "suika.erkin.party:70/1/gophwr")
 
+(define *download-folder* #f)
+
 (define *scrolls-per-page* 500)
 (define *wheel-step* 1)
 
