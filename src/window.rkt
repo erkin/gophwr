@@ -235,7 +235,7 @@
   (loading urn)
   ;; Start the thread to dial the address and render the menu.
   (thread (λ ()
-            ((if (char=? type #\1)
+            ((if (member type '(#\1 #\7))
                  render-menu
                  render-text)
              page-text (fetch-file domain port path #:type 'text)

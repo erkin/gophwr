@@ -94,7 +94,8 @@
        (unless (string=? line ".")
          (let-values (((type text path domain port)
                        (parse-selector line)))
-           (let ((click (λ _ (go-to (string-append domain ":" port "/" type path)))))
+           (let* ((address (string-append domain ":" port "/" type path))
+                  (click (λ _ (go-to address))))
              (case type
                (("i")
                 (if (string=? path "TITLE")
@@ -120,10 +121,11 @@
                     (insert-selector d-document text click "htm")))
                (("7")
                 (insert-selector
-                 d-menu text (λ _
-                               (message-box
-                                "Unimplemented"
-                                "Queries are not yet implemented."))
+                 d-menu text
+                 (λ _
+                   (let ((query (get-text-from-user "Query" text)))
+                     (when query
+                       (go-to (string-append address "\t" query)))))
                  #:decorator "???"))
                (("g" "I")
                 (insert-selector d-download text click #:decorator "img"))

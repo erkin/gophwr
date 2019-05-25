@@ -12,14 +12,14 @@
   ;; File type is mandatory if there's a path.
   (regexp
    (string-append
-    "^"              ; Regexp begins here
-      "([^/?#:]*)"   ; Domain can be anything, including IP addresses
-      "(:[0-9]+)?"   ; Port
-      "(/"           ; Path begins here
-        "([^/])"     ; Single character file type
-        "(/[^?#]*)*" ; Rest of the path
-      ")?"           ; Path ends here
-    "/?$"            ; Regexp ends here
+    "^"            ; Regexp begins here
+      "([^/?#:]*)" ; Domain can be anything, including IP addresses
+      "(:[0-9]+)?" ; Port
+      "(/"         ; Path begins here
+        "([^/])"   ; Single character file type
+        "(/.*)*"   ; Rest of the path
+      ")?"         ; Path ends here
+    "/?$"          ; Regexp ends here
     )))
 
 (define selector-regexp
