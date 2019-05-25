@@ -32,5 +32,4 @@
 (define *clicked-colour*
   (make-object color% #xAA #xEE #xEE))
 
-;;; EXPERIMENTAL - DOESN'T WORK
-(define *tls-enabled?* #f)
+(define tls-enabled? (make-parameter #f))

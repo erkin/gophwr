@@ -3,7 +3,7 @@
          save-file initialise-styles
          d-usual)
 
-(require net/sendurl)
+(require (only-in net/sendurl send-url))
 (require "config.rkt"
          "parser.rkt")
 
@@ -119,9 +119,9 @@
                 (if (and (> (string-length path) 4)
                          (string=? "URL:" (substring path 0 4)))
                     (insert-selector d-link text
-                                     (λ _ (send-url (substring path 4)))
+                                     (λ _ (send-url (substring path 4) #f))
                                      #:decorator "url")
-                    (insert-selector d-document text click "htm")))
+                    (insert-selector d-document text click #:decorator "htm")))
                (("7")
                 (insert-selector
                  d-menu text
