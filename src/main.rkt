@@ -1,6 +1,7 @@
 #lang racket/base
 
 (require racket/cmdline)
+(require openssl)
 
 (require "const.rkt"
          "config.rkt"
@@ -16,6 +17,11 @@
     (command-line
      #:program *project-name*
 
+     #:once-each
+     (("--ssl" "--tls")
+      "Enable TLS mode"
+      (tls-enabled? #t))
+
      #:once-any
      (("--version" "-v")
       "Show version and licence information"
@@ -29,6 +35,14 @@
      (if (null? addresses)
          (list *homepage*)
          addresses)))
+
+  (if (tls-enabled?)
+      (writeln "TLS option enabled.")
+      (unless ssl-available?
+        (writeln "However, OpenSSL is not available.")
+        (writeln ssl-load-fail-reason)
+        (writeln "Aborting.")
+        (exit 1)))
 
   (initialise-window)
   

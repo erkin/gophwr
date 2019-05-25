@@ -14,15 +14,17 @@
 
 (define (fetch-file host port path #:type type)
   ;; Try to connect with SSL if it's enabled.
-  ;; Doesn't work reliably.
-  ;; TODO: Add back the fallback mechanism.
+  ;; TODO: Add a fallback mechanism.
   (let-values (((in out)
-                ((if (and *tls-enabled?* ssl-available?)
+                ((if (tls-enabled?)
                      ssl-connect/enable-break
                      tcp-connect/enable-break)
                  host port)))
     ;; Request the desired file.
     (write-line path out)
+    ;; Output port mustn't be closed before the input is completely
+    ;; read. port->bytes and port->lines automatically close their
+    ;; respective input ports.
     (flush-output out)
     ;; TODO: Cleanup, better error handling.
     (case type

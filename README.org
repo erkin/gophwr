@@ -28,3 +28,8 @@
     + Keyboard shortcuts
     + Bookmarks
     + Tabbed navigation
+
+** Dependencies
+   Depends on =openssl= module for TLS, although it can be trivially diked out
+   if necessary. =net-lib= is used only for =send-url= (for =h= selectors) and
+   can also be effortlessly removed. Besides these, it's just =gui-lib=.
