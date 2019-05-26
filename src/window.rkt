@@ -120,7 +120,7 @@
 (define page-text
   (new text%
    (line-spacing 0.6)
-       (auto-wrap #f)))
+   (auto-wrap (auto-wrap?))))
 
 
 ;;; GUI starts here.
@@ -134,7 +134,6 @@
   (populate-menu-bar)
 
   (send* page-text
-    (auto-wrap *auto-wrap?*)
     (change-style d-usual)
     (set-max-undo-history 0))
   (send* page-canvas
