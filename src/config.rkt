@@ -10,6 +10,7 @@
 
 (define *scrolls-per-page* 500)
 (define *wheel-step* 1)
+(define *auto-wrap?* #t)
 
 (define *initial-width* 1024)
 (define *initial-height* 768)

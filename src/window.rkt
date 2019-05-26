@@ -52,7 +52,6 @@
        (label "&Quit")
        (callback (λ _
                    (exit '()))))
-  ;; message-box is good enough for this.
   (new menu-item% (parent help-menu)
        (label "&About")
        (callback (λ _
@@ -83,12 +82,12 @@
 
 (define refresh-key
   (new button% (parent address-pane)
-       (label "\u21bb")
+       (label "\u21bb") ; Clockwise arrow
        (callback (λ _ (refresh)))))
 
 (define home-key
   (new button% (parent address-pane)
-       (label "\u2302")
+       (label "\u2302") ; House sign
        (callback (λ _ (go-to *homepage*)))))
 
 (define address-field
@@ -135,6 +134,7 @@
   (populate-menu-bar)
 
   (send* page-text
+    (auto-wrap *auto-wrap?*)
     (change-style d-usual)
     (set-max-undo-history 0))
   (send* page-canvas
@@ -241,7 +241,7 @@
       (set! previous-address (cons address previous-address))))
 
   (loading urn)
-  ;; Start the thread to dial the address and render the menu.
+  ;; Start the thread to fetch the page and display it.
   (thread (λ ()
             ((if (member type '(#\1 #\7))
                  render-menu
