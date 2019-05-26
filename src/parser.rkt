@@ -75,4 +75,10 @@
                       address "null.host")
                   (if (non-empty-string? port)
                       port "70")))
-        (raise-user-error (string-append "Invalid selector: " line)))))
+        ;; Some non-conformant pages omit all other fields for 'i' type.
+        ;; We need to make an exception for them.
+        (if (member (substring line 0 1) '("i" "3"))
+            (values "i" (substring line 1) "/" "null.host" "70")
+            ;; Otherwise, it's too broken to render.
+            (raise-user-error
+             (string-append "Invalid selector: " line))))))
