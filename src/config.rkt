@@ -14,6 +14,9 @@
 (define *initial-width* 1024)
 (define *initial-height* 768)
 
+(define tls-enabled? (make-parameter #f))
+(define auto-wrap? (make-parameter #f))
+
 (define *fg-colour*
   (make-object color% #xEE #xEE #xEE))
 (define *bg-colour*
@@ -31,6 +34,3 @@
   (make-object color% #xEE #xAA #xEE))
 (define *clicked-colour*
   (make-object color% #xAA #xEE #xEE))
-
-(define tls-enabled? (make-parameter #f))
-(define auto-wrap? (make-parameter #f))

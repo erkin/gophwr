@@ -6,7 +6,7 @@
     resorting to web technologies. No HTML nor CSS under the hood.
 
 ** How to use
-   ~% racket src/main.rkt~
+   ~% racket src/main.rkt [--tls] [address]~
 
 ** Status
    This project is still under construction and is barely functional.
@@ -16,18 +16,28 @@
 
    [[https://user-images.githubusercontent.com/591669/58346065-9a2c4c80-7e62-11e9-9a60-4758bad8b8eb.png]]
 
+
+*** Features
+    + Clickable links in colourful menus
+    + Download binary files
+    + Save currently viewed page
+    + Back/forward page
+    + Delegate WWW links to web browser
+
 *** Work in progress
     + TLS support
     + Themes
       + Font settings
       + Customisable colours
     + Mouseover links
+    + Options menu
 
 *** Up next
     + Render images
     + Keyboard shortcuts
     + Bookmarks
     + Tabbed navigation
+    + Find in page
 
 ** Dependencies
    Depends on =lib{crypto,ssl}.{so,dll,dylib}= for TLS, although it can be
