@@ -17,6 +17,8 @@
 (define tls-enabled? (make-parameter #f))
 (define auto-wrap? (make-parameter #f))
 
+(define *font* "Unifont")
+
 (define *fg-colour*
   (make-object color% #xEE #xEE #xEE))
 (define *bg-colour*

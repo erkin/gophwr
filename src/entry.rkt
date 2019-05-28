@@ -19,6 +19,7 @@
 
 (define (initialise-styles)
   (send* d-usual
+    (set-face *font*)
     (set-family 'modern)
     (set-delta 'change-weight 'normal)
     (set-delta-foreground *fg-colour*)
