@@ -4,8 +4,8 @@
 (require "config.rkt"
          "const.rkt")
 
-(require racket/tcp)
-(require openssl)
+(require (only-in racket/tcp tcp-connect/enable-break))
+(require (only-in    openssl ssl-connect/enable-break))
 
 
 ;;; \r\n is mandatory in Gopher.

@@ -1,6 +1,8 @@
 #lang racket/gui
 (provide initialise-window go-to)
 
+(require (only-in openssl ssl-available?))
+
 (require "config.rkt"
          "const.rkt"
          "entry.rkt"
@@ -29,11 +31,31 @@
   (new menu% (parent menu-bar)
        (label "&File")))
 
+(define tools-menu
+  (new menu% (parent menu-bar)
+       (label "&Tools")))
+
 (define help-menu
   (new menu% (parent menu-bar)
        (label "&Help")))
 
+(define tls-toggle
+  (new menu-item% (parent tools-menu)
+       (label (if (tls-enabled?)
+                  "Disable TL&S"
+                  "Enable TL&S"))
+       (callback (λ (item event)
+                   (cond
+                     ((tls-enabled?)
+                      (tls-enabled? #f)
+                      (send item set-label "Enable TL&S"))
+                     (else
+                      (tls-enabled? #t)
+                      (send item set-label "Disable TL&S")))))))
+
 (define (populate-menu-bar)
+  (unless ssl-available?
+    (send tls-toggle enable #f))
   ;; Save page to file.
   ;; Note that this saves the formatted version of menus.
   (new menu-item% (parent file-menu)
