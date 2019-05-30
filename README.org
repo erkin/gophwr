@@ -12,10 +12,8 @@
    This project is still under construction and is barely functional.
    Patches welcome.
 
-   The way it looks as of v0.3.1:
-
-   [[https://user-images.githubusercontent.com/591669/58346065-9a2c4c80-7e62-11e9-9a60-4758bad8b8eb.png]]
-
+**** The way it looks as of v0.3.4
+     [[https://user-images.githubusercontent.com/591669/58642010-101e3100-8305-11e9-8d09-c392907374ad.png]]
 
 *** Features
     + Clickable links in colourful menus
