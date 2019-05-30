@@ -19,14 +19,14 @@
 
 (define (initialise-styles)
   (send* d-usual
-    (set-face *font*)
     (set-family 'modern)
-    (set-delta 'change-weight 'normal)
+    (set-face *font*)
+    (set-delta 'change-size *font-size*)
     (set-delta-foreground *fg-colour*)
     (set-delta-background *bg-colour*))
   (send* d-title
     (copy d-usual)
-    (set-delta 'change-weight 'bold))
+    (set-delta 'change-size *title-size*))
   (send* d-error
     (copy d-usual)
     (set-delta-foreground *error-colour*))

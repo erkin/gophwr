@@ -17,7 +17,12 @@
 (define tls-enabled? (make-parameter #f))
 (define auto-wrap? (make-parameter #f))
 
-(define *font* "Unifont")
+;; A string containing the name of the font
+;; #f for default monospace.
+(define *font* #f)
+
+(define *font-size* 11)
+(define *title-size* 25)
 
 (define *fg-colour*
   (make-object color% #xEE #xEE #xEE))
