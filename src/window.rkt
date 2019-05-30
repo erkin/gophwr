@@ -153,7 +153,7 @@
 
 (define (loading urn)
   (send frame set-status-text
-        (string-append "Loading " urn " \u231b")) ; hourglass
+        (string-append "\u231b Loading " urn)) ; hourglass
   (send address-field set-value urn)
   (send page-text begin-edit-sequence)
   (send page-canvas enable #f)
@@ -204,16 +204,16 @@
 
 (define (go-to uri #:history (history #f))
   (unless (send page-text in-edit-sequence?)
-   (let-values
-       (((urn domain port type path)
-         ;; Strip out URL scheme from the address.
-         (parse-urn (string-trim
-                     (if (and (> (string-length uri) 8)
-                              (string=? (substring uri 0 9) "gopher://"))
-                         (substring uri 9)
-                         uri) #:repeat? #t))))
-     ;; Do nothing if the address is blank.
-     (when (non-empty-string? urn)
+    (match-let
+        (((list urn domain port type path)
+          ;; Strip out URL scheme from the address.
+          (parse-urn (string-trim
+                      (if (and (> (string-length uri) 8)
+                               (string=? (substring uri 0 9) "gopher://"))
+                          (substring uri 9)
+                          uri) #:repeat? #t))))
+      ;; Do nothing if the address is blank.
+      (when (non-empty-string? urn)
        (case type
          ((#\0 #\1 #\7 #\m #\M #\p #\x)
           ;; Don't discard the next address stack if we're moving back

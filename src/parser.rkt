@@ -44,20 +44,19 @@
   ;; format: ("address" "domain" ":port" "/type/path" "type" "/path")
   (let ((parsed-urn (regexp-match magic-regexp urn)))
     (if parsed-urn
-        (match-let-values (((address domain port _ type path)
-                         (apply values parsed-urn)))
+        (match-let (((list address domain port _ type path) parsed-urn))
           ;; new format: ("address" "domain" port #\type "/path")
-          (values address
-                  domain
-                  (if port
-                      ;; ":70" -> 70
-                      (string->number (substring port 1))
-                      ;; Fall back to 70 by default.
-                      70)
-                  (if type
-                      (string->char type)
-                      #\1)
-                  (or path "/")))
+          (list address
+                domain
+                (if port
+                    ;; ":70" -> 70
+                    (string->number (substring port 1))
+                    ;; Fall back to 70 by default.
+                    70)
+                (if type
+                    (string->char type)
+                    #\1)
+                (or path "/")))
         (raise-user-error
          (string-append "Failed to parse address: " urn)))))
 
