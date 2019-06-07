@@ -237,18 +237,8 @@
       ;; Do nothing if the address is blank.
       (when (non-empty-string? urn)
         (case type
-          ((#\0 ; Text
-            #\1 ; Directory
-            #\7 ; Query
-            #\H ; Compact HTML (unofficial)
-            #\M ; MIME
-            #\c ; Calendar
-            #\e ; Event (unofficial)
-            #\h ; HTML
-            #\m ; mbox (unofficial)
-            #\w ; Wiki (unofficial)
-            #\x ; XML (unofficial)
-            )
+          ;; See: https://github.com/erkin/gophwr/wiki/Entity-types
+          ((#\0 #\1 #\7 #\H #\M #\c #\e #\h #\m #\w #\x)
            ;; Don't discard the next address stack if we're moving back
            ;; and forth.
            (unless history
@@ -256,27 +246,11 @@
            (to-text urn domain port type path))
           ;; 4 and 6 are actually text but we're treating them like
           ;; binary. Watch out for a stray '.' at the end!
-          ((#\4 ; HQX
-            #\5 ; Archive
-            #\6 ; uuencoded
-            #\9 ; Binary
-            #\P ; PDF (unofficial)
-            #\d ; Document
-            #\s ; Sound
-            #\; ; Video
-            #\< ; Audio
-            )
+          ((#\4 #\5 #\6 #\9 #\P #\d #\s #\; #\<)
            (to-binary urn domain port type path))
-          ((#\I ; Image
-            #\g ; GIF
-            #\p ; PNG (unofficial)
-            #\: ; Bitmap image
-            )
+          ((#\I #\g #\p #\:)
            (to-image urn domain port type path))
-          ((#\2 ; CSO pbx
-            #\8 ; Telnet
-            #\T ; TN3270 telnet
-            )
+          ((#\2 #\8 #\T)
            (error-page "Session types not supported."))
           (else
            (error-page "Entity type not recognised.")))))))
