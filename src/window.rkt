@@ -305,15 +305,13 @@
 (define (to-binary urn domain port type path)
   (loading urn)
   (thread (λ ()
-            (save-file
-             frame
-             ;; Try to guess the filename.
-             (let ((path-parts (string-split path "/")))
-               (if (null? path-parts)
-                   ""
-                   (last path-parts)))
-             (fetch-file domain port path #:type 'binary)
-             #:mode 'binary)
+            (let ((path-parts (string-split path "/")))
+              (if (null? path-parts)
+                  (error-page "No file path given to download.")
+                  (save-file frame
+                             (last path-parts)
+                             (fetch-file domain port path #:type 'binary)
+                             #:mode 'binary)))
             (loaded))))
 
 ;;; TODO: Display the image instead of downloading it.
