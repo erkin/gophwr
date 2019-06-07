@@ -112,17 +112,18 @@
                (("3")
                 (send page insert (make-string 6 #\space))
                 (insert-text d-error text))
-               (("0")
+               (("0" "M" "c" "e" "m" "w" "x")
                 (insert-selector d-document text click #:decorator "txt"))
                (("+")
                 (insert-selector d-menu text click #:decorator "dup"))
-               (("h")
+               (("H" "h")
                 (if (and (> (string-length path) 4)
                          (string=? "URL:" (substring path 0 4)))
                     (insert-selector d-link text
                                      (λ _ (send-url (substring path 4) #f))
                                      #:decorator "url")
-                    (insert-selector d-document text click #:decorator "htm")))
+                    (insert-selector d-document text click
+                                     #:decorator "htm")))
                (("7")
                 (insert-selector
                  d-menu text
@@ -131,10 +132,12 @@
                      (when query
                        (go-to (string-append address "\t" query)))))
                  #:decorator "???"))
-               (("g" "I" "p")
+               (("I" "g" "p" ":")
                 (insert-selector d-download text click #:decorator "img"))
-               (("4" "5" "6" "9" "c" "d" "e" "s" ";")
+               (("4" "5" "6" "9" "P" "d" "s" ";" "<")
                 (insert-selector d-download text click #:decorator "bin"))
+               (("2" "8" "T")
+                (insert-selector d-error text click #:decorator "tel"))
                (else
                 (insert-text d-error
                              (string-append "Unknown selector type: " type))
