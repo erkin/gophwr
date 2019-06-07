@@ -250,6 +250,8 @@
            (to-binary urn domain port type path))
           ((#\I #\g #\p #\:)
            (to-image urn domain port type path))
+          ((#\+)
+           (error-page "Duplicate type not supported yet."))
           ((#\2 #\8 #\T)
            (error-page "Session types not supported."))
           (else

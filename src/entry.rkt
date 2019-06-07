@@ -114,8 +114,6 @@
                 (insert-text d-error text))
                (("0" "M" "c" "e" "m" "w" "x")
                 (insert-selector d-document text click #:decorator "txt"))
-               (("+")
-                (insert-selector d-menu text click #:decorator "dup"))
                (("H" "h")
                 (if (and (> (string-length path) 4)
                          (string=? "URL:" (substring path 0 4)))
@@ -136,6 +134,8 @@
                 (insert-selector d-download text click #:decorator "img"))
                (("4" "5" "6" "9" "P" "d" "s" ";" "<")
                 (insert-selector d-download text click #:decorator "bin"))
+               (("+")
+                (insert-selector d-menu text click #:decorator "dup"))
                (("2" "8" "T")
                 (insert-selector d-error text click #:decorator "tel"))
                (else

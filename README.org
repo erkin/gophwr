@@ -31,6 +31,7 @@
     + Options menu
 
 *** Up next
+    + Duplicate (=+=) types
     + Render images
     + Keyboard shortcuts
     + Bookmarks
