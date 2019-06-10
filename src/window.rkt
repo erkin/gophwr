@@ -241,9 +241,11 @@
                           uri) #:repeat? #t))))
       ;; Do nothing if the address is blank.
       (when (non-empty-string? urn)
+        ;; See: https://github.com/erkin/gophwr/wiki/Entity-types
         (case type
-          ;; See: https://github.com/erkin/gophwr/wiki/Entity-types
-          ((#\0 #\1 #\7 #\H #\M #\c #\e #\h #\m #\w #\x)
+          ;; + type isn't meant to be called directly, so we'll assume
+          ;; it's a text file for convenience.
+          ((#\0 #\1 #\7 #\H #\M #\c #\e #\h #\m #\w #\x #\+)
            ;; Don't discard the next address stack if we're moving back
            ;; and forth.
            (unless history
@@ -255,8 +257,6 @@
            (to-binary urn domain port type path))
           ((#\I #\g #\p #\:)
            (to-image urn domain port type path))
-          ((#\+)
-           (error-page "Duplicate type not supported yet."))
           ((#\2 #\8 #\T)
            (error-page "Session types not supported."))
           (else
