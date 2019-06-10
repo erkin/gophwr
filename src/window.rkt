@@ -40,18 +40,14 @@
        (label "&Help")))
 
 (define tls-toggle
-  (new menu-item% (parent tools-menu)
-       (label (if (tls-enabled?)
-                  "Disable TL&S"
-                  "Enable TL&S"))
+  (new checkable-menu-item% (parent tools-menu)
+       (label "Enable TL&S")
+       (help-string "Exclusively use TLS when connecting to gopherholes")
+       (checked (tls-enabled?))
        (callback (λ (item event)
-                   (cond
-                     ((tls-enabled?)
-                      (tls-enabled? #f)
-                      (send item set-label "Enable TL&S"))
-                     (else
-                      (tls-enabled? #t)
-                      (send item set-label "Disable TL&S")))))))
+                   (if (send item is-checked?)
+                       (tls-enabled? #t)
+                       (tls-enabled? #f))))))
 
 (define (populate-menu-bar)
   (unless ssl-available?
@@ -59,7 +55,9 @@
   ;; Save page to file.
   ;; Note that this saves the formatted version of menus.
   (new menu-item% (parent file-menu)
-       (label "&Download")
+       (label "&Save")
+       (help-string "Save current file to disk")
+       (shortcut #\s)
        (callback
         (λ _
           ;; Try to guess the filename.
@@ -70,12 +68,16 @@
                  (last address-parts) #f)
              (send page-text get-text)
              #:mode 'text)))))
+  (new separator-menu-item% (parent file-menu))
   (new menu-item% (parent file-menu)
        (label "&Quit")
+       (help-string "Exit gophwr")
+       (shortcut #\q)
        (callback (λ _
-                   (exit '()))))
+                   (exit null))))
   (new menu-item% (parent help-menu)
        (label "&About")
+       (help-string "Show version and licence info")
        (callback (λ _
                    (message-box
                     (string-append "About " *project-name*)
