@@ -9,7 +9,7 @@
    ~% racket src/main.rkt [--tls] [address]~
 
 ** Status
-   This project is still under construction and is barely functional.
+   This project is still under construction, expect occasional breakage.
    Patches welcome.
 
 **** The way it looks as of v0.3.4
@@ -17,6 +17,7 @@
 
 *** Features
     + Clickable links in colourful menus
+    + View images
     + Download binary files
     + Save currently viewed page
     + Back/forward page
