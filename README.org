@@ -39,16 +39,3 @@
     + Tabbed navigation
     + Find in page
     + Zooming
-
-** Dependencies
-   =net-lib= is used only for =send-url= (for =h= selectors) and can also be
-   effortlessly removed. Besides that, it's just =gui-lib=.
-
-*** TLS
-   Depends on =lib{crypto,ssl}.{so,dll,dylib}= for TLS, although TLS
-   functionality can be trivially diked out if necessary.
-
-*** GTK
-    On systems besides Windows and macOS, if your system has GTK 3, it will
-    try to use that. Otherwise, it will fall back on GTK 2. To force it to
-    use GTK 2, set the environment variable =PLT_GTK2=.
