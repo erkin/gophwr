@@ -58,16 +58,14 @@
               (send* page (insert line) (insert "\n")))
             content))
 
-(define (save-file frame filename content #:mode (mode 'binary))
-  (let ((file-path (put-file "Choose a download location"
-                             frame *download-folder* filename)))
-    (when file-path
-      (let ((output-file (open-output-file
-                          file-path #:mode mode #:exists 'replace)))
-        (if (eq? mode 'binary)
-            (write-bytes-avail/enable-break content output-file)
-            (write-string content output-file))
-        (close-output-port output-file)))))
+(define (save-file file-path content #:mode (mode 'binary))
+  (when file-path
+    (let ((output-file (open-output-file
+                        file-path #:mode mode #:exists 'replace)))
+      (if (eq? mode 'binary)
+          (write-bytes-avail/enable-break content output-file)
+          (write-string content output-file))
+      (close-output-port output-file))))
 
 (define (render-menu page content go-to)
   (let* ((insert-text

@@ -60,14 +60,12 @@
        (shortcut #\s)
        (callback
         (λ _
-          ;; Try to guess the filename.
-          (let ((address-parts (string-split address "/")))
-            (save-file
-             frame
-             (if (> (length address-parts) 2)
-                 (last address-parts) #f)
-             (send page-text get-text)
-             #:mode 'text)))))
+          (let* ((filename (put-file "Choose a download location"
+                                     frame *download-folder* (last (string-split address "/")))))
+            (when filename
+              (save-file filename
+                         (send page-text get-text)
+                         #:mode 'text))))))
   (new separator-menu-item% (parent file-menu))
   (new menu-item% (parent file-menu)
        (label "&Quit")
@@ -186,8 +184,7 @@
 (define (loaded)
   (send frame set-status-text "")
   (send frame set-label
-        (string-append *project-name*
-                       " \u2014 " address))
+        (string-append *project-name* " \u2014 " address)) ; em-dash
   (send page-text scroll-to-position 0)
   (when (send page-text in-edit-sequence?)
     (send page-text end-edit-sequence))
@@ -292,13 +289,12 @@
   (loading urn)
   (thread
    (λ ()
-     (let ((path-parts (string-split path "/")))
-       (if (null? path-parts)
-           (error-page "No file path given to download.")
-           (save-file frame
-                      (last path-parts)
-                      (fetch-file domain port path #:type 'binary)
-                      #:mode 'binary)))
+     (let ((filename (put-file "Choose a download location"
+                               frame *download-folder* (last (string-split path "/")))))
+       (when filename
+         (save-file filename
+                    (fetch-file domain port path #:type 'binary)
+                    #:mode 'binary)))
      (loaded))))
 
 (define (to-image urn domain port type path)
