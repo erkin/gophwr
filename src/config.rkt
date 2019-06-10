@@ -1,6 +1,7 @@
-#lang racket/gui
+#lang racket/base
 (provide (all-defined-out))
 
+(require (only-in racket/draw make-color))
 
 ;;;; These will be adjustable in the options menu.
 
@@ -22,22 +23,26 @@
 (define *font* #f)
 
 (define *font-size* 11)
-(define *title-size* 25)
+(define *title-size* 23)
+
+;; Besides hexcodes, strings of colour names are accepted as well.
+;; To see a list of colours, try:
+;; (require racket/draw) (for-each displayln (send the-color-database get-names))
 
 (define *fg-colour*
-  (make-object color% #xEE #xEE #xEE))
+  (make-color #xEE #xEE #xEE))
 (define *bg-colour*
-  (make-object color% #x11 #x11 #x11))
+  (make-color #x11 #x11 #x11))
 
 (define *menu-colour*
-  (make-object color% #xAA #xAA #xEE))
+  (make-color #xAA #xAA #xEE))
 (define *link-colour*
-  (make-object color% #xAA #xEE #xAA))
+  (make-color #xAA #xEE #xAA))
 (define *error-colour*
-  (make-object color% #xEE #xAA #xAA))
+  (make-color #xEE #xAA #xAA))
 (define *document-colour*
-  (make-object color% #xEE #xEE #xAA))
+  (make-color #xEE #xEE #xAA))
 (define *download-colour*
-  (make-object color% #xEE #xAA #xEE))
+  (make-color #xEE #xAA #xEE))
 (define *clicked-colour*
-  (make-object color% #xAA #xEE #xEE))
+  (make-color #xAA #xEE #xEE))

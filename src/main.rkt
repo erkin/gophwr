@@ -9,7 +9,7 @@
 
 
 (define (display-version)
-  (map displayln *version-message*)
+  (for-each displayln *version-message*)
   (exit null))
 
 (module+ main
