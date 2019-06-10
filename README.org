@@ -27,16 +27,17 @@
     + Themes
       + Font settings
       + Customisable colours
-    + Mouseover links
-    + Options menu
+    + Mouseover/right-click links
+    + Render images
 
 *** Up next
+    + Options menu
     + Duplicate (=+=) types
-    + Render images
     + Keyboard shortcuts
     + Bookmarks
     + Tabbed navigation
     + Find in page
+    + Zooming
 
 ** Dependencies
    =net-lib= is used only for =send-url= (for =h= selectors) and can also be

@@ -192,13 +192,18 @@
   (send page-canvas enable #t)
   (end-busy-cursor))
 
-
 (define (error-page . strs)
   (clear-page)
   (loaded)
   (send frame set-status-text "Error!")
   (send page-text insert
         (string-append* *project-name* " error: " strs)))
+
+(define (make-image-snip image-bytes type)
+  (make-object image-snip%
+               (make-object bitmap%
+                            (open-input-bytes image-bytes)
+                            type *bg-colour* #t)))
 
 ;;; Navigation
 (define (refresh)
@@ -257,38 +262,53 @@
           (else
            (error-page "Entity type not recognised.")))))))
 
-(define (to-text urn domain port type path)
-  (clear-page)
+(define (update-address urn)
   (unless (string=? address urn)
     ;; Refresh the global address value, in case URL scheme was
     ;; stripped out.
     (set! address urn)
     ;; Omit duplicate entries.
     (when (or (null? previous-address)
-            (not (string=? address (car previous-address))))
-      (set! previous-address (cons address previous-address))))
+              (not (string=? address (car previous-address))))
+      (set! previous-address (cons address previous-address)))))
 
+(define (to-text urn domain port type path)
+  (clear-page)
+  (update-address urn)
   (loading urn)
   ;; Start the thread to fetch the page and display it.
-  (thread (λ ()
-            ((if (member type '(#\1 #\7))
-                 render-menu
-                 render-text)
-             page-text (fetch-file domain port path #:type 'text)
-             go-to)
-            (loaded))))
+  (thread
+   (λ ()
+     ((if (member type '(#\1 #\7))
+          render-menu
+          render-text)
+      page-text (fetch-file domain port path #:type 'text)
+      go-to)
+     (loaded))))
 
 (define (to-binary urn domain port type path)
   (loading urn)
-  (thread (λ ()
-            (let ((path-parts (string-split path "/")))
-              (if (null? path-parts)
-                  (error-page "No file path given to download.")
-                  (save-file frame
-                             (last path-parts)
-                             (fetch-file domain port path #:type 'binary)
-                             #:mode 'binary)))
-            (loaded))))
+  (thread
+   (λ ()
+     (let ((path-parts (string-split path "/")))
+       (if (null? path-parts)
+           (error-page "No file path given to download.")
+           (save-file frame
+                      (last path-parts)
+                      (fetch-file domain port path #:type 'binary)
+                      #:mode 'binary)))
+     (loaded))))
 
-;;; TODO: Display the image instead of downloading it.
-(define to-image to-binary)
+(define (to-image urn domain port type path)
+  (clear-page)
+  (update-address urn)
+  (loading urn)
+  (thread
+   (λ ()
+     (send page-text insert
+           (make-image-snip (fetch-file domain port path #:type 'binary)
+                            (case type
+                              ((#\I #\:) 'unknown/alpha)
+                              ((#\g) 'gif/alpha)
+                              ((#\p) 'png/alpha))))
+     (loaded))))
