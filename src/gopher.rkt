@@ -12,7 +12,9 @@
 (define (write-line str out)
   (display (string-append str "\r\n") out))
 
-(define (fetch-file host port path #:type type)
+(define/contract (fetch-file host port path #:type type)
+  (-> string? exact-positive-integer? string? #:type symbol?
+      (or/c (listof string?) bytes?))
   ;; Try to connect with SSL if it's enabled.
   (let-values (((in out)
                 ;; TODO: Fallback to plaintext if TLS handshake fails.

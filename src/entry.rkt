@@ -99,8 +99,8 @@
      (λ (line)
        ;; Pesky end-of-file dot...
        (unless (member line '("" "."))
-         (let-values (((type text path domain port)
-                       (parse-selector line)))
+         (match-let (((list type text path domain port)
+                      (parse-selector line)))
            (let* ((address (string-append domain ":" port "/" type path))
                   (click (λ _ (go-to address))))
              (case type

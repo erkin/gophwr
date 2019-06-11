@@ -207,7 +207,8 @@
     (change-style d-error)
     (insert (string-append* project-name " error: " strs))))
 
-(define (make-image-snip image-bytes type)
+(define/contract (make-image-snip image-bytes type)
+  (-> bytes? symbol? (is-a?/c image-snip%))
   (make-object image-snip%
                (make-object bitmap%
                             (open-input-bytes image-bytes)
@@ -260,7 +261,7 @@
         (case type
           ;; + type isn't meant to be called directly, so we'll assume
           ;; it's a text file for convenience.
-          ((#\0 #\1 #\7 #\H #\M #\c #\e #\h #\m #\w #\x #\+)
+          (("0" "1" "7" "H" "M" "c" "e" "h" "m" "w" "x" "+")
            ;; Don't discard the next address stack if we're moving back
            ;; and forth.
            (unless history
@@ -270,11 +271,11 @@
            (to-text urn domain port type path))
           ;; 4 and 6 are actually text but we're treating them like
           ;; binary. Watch out for a stray '.' at the end!
-          ((#\4 #\5 #\6 #\9 #\P #\d #\s #\; #\<)
+          (("4" "5" "6" "9" "P" "d" "s" ";" "<")
            (to-binary urn domain port type path))
-          ((#\I #\g #\p #\:)
+          (("I" "g" "p" ":")
            (to-image urn domain port type path))
-          ((#\2 #\8 #\T)
+          (("2" "8" "T")
            (error-page "Session types not supported."))
           (else
            (error-page "Entity type not recognised: " (make-string type))))))))
@@ -296,7 +297,7 @@
   ;; Start the thread to fetch the page and display it.
   (thread
    (thunk
-    ((if (member type '(#\1 #\7))
+    ((if (member type '("1" "7"))
          render-menu
          render-text)
      page-text (fetch-file domain port path #:type 'text)
@@ -324,7 +325,7 @@
     (send page-text insert
           (make-image-snip (fetch-file domain port path #:type 'binary)
                            (case type
-                             ((#\I #\:) 'unknown/alpha)
-                             ((#\g) 'gif/alpha)
-                             ((#\p) 'png/alpha))))
+                             (("I" ":") 'unknown/alpha)
+                             (("g") 'gif/alpha)
+                             (("p") 'png/alpha))))
     (loaded))))
