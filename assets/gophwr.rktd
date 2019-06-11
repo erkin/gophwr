@@ -17,8 +17,7 @@
 
  ;; Besides hexcodes, strings of colour names are accepted as well.
  ;; To see a list of colours, try:
- ;; (require racket/draw) (for-each displayln (send the-color-database get-names))
-
+ ;; > (require racket/draw) (for-each displayln (send the-color-database get-names))
  (fg-colour (#xEE #xEE #xEE))
  (bg-colour (#x11 #x11 #x11))
  (menu-colour (#xAA #xAA #xEE))
