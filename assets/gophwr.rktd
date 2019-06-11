@@ -6,15 +6,17 @@
  ;; #f for the directory gophwr was run in.
  (download-folder #f)
 
- ;; Number of lines scrolled through with each wheel click.
- ;; #f disables scrolling. (Probably not what you want.)
- (wheel-step 3)
- (auto-wrap? #f)
-
  ;; Window dimensions in pixels.
  ;; #f for default.
  (initial-width 1024)
  (initial-height 768)
+
+ ;; Number of lines scrolled through with each wheel click.
+ ;; #f disables scrolling. (Probably not what you want.)
+ (wheel-step 3)
+
+ ;; Wrap around text when it hits the eastern border.
+ (auto-wrap? #f)
 
  ;; A string containing the name of the font
  ;; #f for default monospace.

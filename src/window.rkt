@@ -16,12 +16,37 @@
 (define next-address '())
 
 ;;; Main window
+;; We're overriding frame% to be able to implement window-wide
+;; keybindings.
 (define frame
-  (new frame%
-       (label
-        (string-append project-name " \u2014 " address))
-       (width initial-width)
-       (height initial-height)))
+  (new
+   (class frame% (super-new)
+     (define/override (on-subwindow-char receiver event)
+       (or (handle-keycombo event)
+           (send this on-menu-char event)
+           (send this on-system-menu-char event)
+           (send this on-traverse-char event))))
+   (label project-name)
+   (width initial-width)
+   (height initial-height)))
+
+(define/contract (handle-keycombo key)
+  (-> (is-a?/c key-event%) (or/c void? false/c))
+  (let ((ctrl? (send key get-control-down))
+        (meta? (send key get-meta-down))
+        (key-code (send key get-key-code)))
+    (cond
+      ((eq? key-code 'f5)
+       (refresh))
+      ((and meta? (eq? key-code 'left))
+       (go-back))
+      ((and meta? (eq? key-code 'right))
+       (go-forward))
+      ((and ctrl? (eq? key-code #\l))
+       (send address-field focus)
+       (send (send address-field get-editor) select-all))
+      (else
+       #f))))
 
 ;;;; Menubar
 (define menu-bar
@@ -135,22 +160,18 @@
        (horiz-margin 0)
        (callback (λ _ (go)))))
 
-
 ;;;; Page view
 (define page-canvas
   (new editor-canvas% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus auto-hscroll auto-vscroll))
        (wheel-step wheel-step)
-       ;; Minimum size the canvas can be shrunk to is 16 lines.
-       (line-count 16)
        (stretchable-width #t)
        (stretchable-height #t)))
 
 (define page-text
   (new text%
-   (line-spacing 0.6)
-   (auto-wrap auto-wrap?)))
+       (auto-wrap auto-wrap?)))
 
 
 ;;; GUI starts here.
@@ -178,21 +199,24 @@
 
 ;;; Frame and page details
 (define (clear-page)
-  (send page-text select-all)
-  (send page-text clear))
+  (send page-text erase))
 
 (define (loading urn)
-  (send frame set-status-text
-        (string-append "\u231b Loading " urn)) ; hourglass
+  (send* frame
+    (set-status-text
+     (string-append "\u231b Loading " urn)) ; hourglass
+    (modified #t))
   (send address-field set-value urn)
   (send page-text begin-edit-sequence)
   (send page-canvas enable #f)
   (begin-busy-cursor))
 
 (define (loaded)
-  (send frame set-status-text "")
-  (send frame set-label
-        (string-append project-name " \u2014 " address)) ; em-dash
+  (send* frame
+    (set-status-text "")
+    (set-label
+     (string-append project-name " \u2014 " address)) ; em-dash
+    (modified #f))
   (send page-text scroll-to-position 0)
   (when (send page-text in-edit-sequence?)
     (send page-text end-edit-sequence))
