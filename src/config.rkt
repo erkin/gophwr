@@ -28,7 +28,7 @@
 ;;; Colours
 (define-syntax-rule (define-colour colour rgb)
   (define colour
-    (apply make-color (get-preference (quote symbol) (λ () rgb) 'timestamp config-file))))
+    (apply make-color (get-preference (quote colour) (λ () rgb) 'timestamp config-file))))
 
 (define-colour fg-colour '(#xEE #xEE #xEE))
 (define-colour bg-colour '(#x11 #x11 #x11))
