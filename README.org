@@ -10,14 +10,18 @@
 
    ~% racket src/main.rkt [--tls] [address]~
 
+   Alternatively, fetch a [[https://github.com/erkin/gophwr/releases][binary release]] (might be outdated) and run it:
+
+   ~% bin/gophwr [--tls] [address]~
+
    To configure it, copy the example [[assets/gophwr.rktd][config file]] to your Racket preferences
    directory. (You can omit lines you aren't interested in.)
 
    ~> (find-system-path 'pref-dir)~
 
 ** Status
-   This project is still under construction, expect occasional breakage.
-   Patches welcome.
+   This project is still a work in progress, expect occasional breakage.
+   Patches and feedback welcome.
 
 **** The way it looks as of v0.3.4
      [[https://user-images.githubusercontent.com/591669/58642010-101e3100-8305-11e9-8d09-c392907374ad.png]]
