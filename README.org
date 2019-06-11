@@ -6,11 +6,14 @@
     resorting to web technologies. No HTML nor CSS under the hood.
 
 ** How to use
-   Install Racket, then run
+   Install Racket, then run:
+
    ~% racket src/main.rkt [--tls] [address]~
 
    To configure it, copy the example [[assets/gophwr.rktd][config file]] to your Racket preferences
-   directory (~> (find-system-path 'pref-dir)~).
+   directory. (You can omit lines you aren't interested in.)
+
+   ~> (find-system-path 'pref-dir)~
 
 ** Status
    This project is still under construction, expect occasional breakage.
