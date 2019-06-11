@@ -97,27 +97,32 @@
   (new button% (parent address-pane)
        (label "\u2b05") ; Back arrow
        (enabled #f)
+       (horiz-margin 0)
        (callback (λ _ (go-back)))))
 (define forward-key
   (new button% (parent address-pane)
-       (label "\u2b95") ; Forward arrow
+       (label "\u27a1") ; Forward arrow
        (enabled #f)
+       (horiz-margin 0)
        (callback (λ _ (go-forward)))))
 
 (define refresh-key
   (new button% (parent address-pane)
-       (label "\u2b6e") ; Clockwise arrow
+       (label "\u21bb") ; Clockwise arrow
+       (horiz-margin 0)
        (callback (λ _ (refresh)))))
 
 (define home-key
   (new button% (parent address-pane)
        (label "\u2302") ; House sign
+       (horiz-margin 0)
        (callback (λ _ (go-to homepage)))))
 
 (define address-field
   (new text-field% (parent address-pane)
        (label "")
        (init-value address)
+       (style '(single))
        ;; Call navigate-addressbar iff the callback event is pressing return key.
        (callback (λ (f event)
                    (when (equal? (send event get-event-type) 'text-field-enter)
@@ -126,6 +131,8 @@
 (define address-button
   (new button% (parent address-pane)
        (label "\u2388") ; Helm sign
+       (vert-margin 1)
+       (horiz-margin 0)
        (callback (λ _ (go)))))
 
 
@@ -133,7 +140,7 @@
 (define page-canvas
   (new editor-canvas% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
-       (style '(no-focus no-hscroll auto-vscroll))
+       (style '(no-focus auto-hscroll auto-vscroll))
        (scrolls-per-page scrolls-per-page)
        (wheel-step wheel-step)
        ;; Minimum size the canvas can be shrunk to is 16 lines.
@@ -218,8 +225,8 @@
               (< (length previous-address) 2))
     (set! next-address (cons address next-address))
     (let ((prev (cadr previous-address)))
-      (set! previous-address (cddr previous-address))
       ;; To make sure the forward stack isn't munged.
+      (set! previous-address (cddr previous-address))
       (when (null? previous-address)
         (send back-key enable #f))
       (send forward-key enable #t)
@@ -271,7 +278,7 @@
           ((#\2 #\8 #\T)
            (error-page "Session types not supported."))
           (else
-           (error-page "Entity type not recognised.")))))))
+           (error-page "Entity type not recognised: " (make-string type))))))))
 
 (define (update-address urn)
   (unless (string=? address urn)
@@ -289,36 +296,36 @@
   (loading urn)
   ;; Start the thread to fetch the page and display it.
   (thread
-   (λ ()
-     ((if (member type '(#\1 #\7))
-          render-menu
-          render-text)
-      page-text (fetch-file domain port path #:type 'text)
-      go-to)
-     (loaded))))
+   (thunk
+    ((if (member type '(#\1 #\7))
+         render-menu
+         render-text)
+     page-text (fetch-file domain port path #:type 'text)
+     go-to)
+    (loaded))))
 
 (define (to-binary urn domain port type path)
   (loading urn)
   (thread
-   (λ ()
-     (let ((filename (put-file "Choose a download location"
-                               frame download-folder (last (string-split path "/")))))
-       (when filename
-         (save-file filename
-                    (fetch-file domain port path #:type 'binary)
-                    #:mode 'binary)))
-     (loaded))))
+   (thunk
+    (let ((filename (put-file "Choose a download location"
+                              frame download-folder (last (string-split path "/")))))
+      (when filename
+        (save-file filename
+                   (fetch-file domain port path #:type 'binary)
+                   #:mode 'binary)))
+    (loaded))))
 
 (define (to-image urn domain port type path)
   (clear-page)
   (update-address urn)
   (loading urn)
   (thread
-   (λ ()
-     (send page-text insert
-           (make-image-snip (fetch-file domain port path #:type 'binary)
-                            (case type
-                              ((#\I #\:) 'unknown/alpha)
-                              ((#\g) 'gif/alpha)
-                              ((#\p) 'png/alpha))))
-     (loaded))))
+   (thunk
+    (send page-text insert
+          (make-image-snip (fetch-file domain port path #:type 'binary)
+                           (case type
+                             ((#\I #\:) 'unknown/alpha)
+                             ((#\g) 'gif/alpha)
+                             ((#\p) 'png/alpha))))
+    (loaded))))
