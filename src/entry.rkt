@@ -1,7 +1,7 @@
 #lang racket/gui
 (provide render-menu render-text
          save-file initialise-styles
-         d-usual)
+         d-usual d-error)
 
 (require (only-in net/sendurl send-url))
 (require "config.rkt"

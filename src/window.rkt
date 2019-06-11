@@ -197,8 +197,9 @@
   (clear-page)
   (loaded)
   (send frame set-status-text "Error!")
-  (send page-text insert
-        (string-append* project-name " error: " strs)))
+  (send* page-text
+    (change-style d-error)
+    (insert (string-append* project-name " error: " strs))))
 
 (define (make-image-snip image-bytes type)
   (make-object image-snip%
