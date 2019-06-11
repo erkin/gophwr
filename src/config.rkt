@@ -15,8 +15,7 @@
 (define-preference homepage "suika.erkin.party:70/1/gophwr")
 (define-preference download-folder #f)
 
-(define-preference scrolls-per-page 500)
-(define-preference wheel-step 1)
+(define-preference wheel-step 3)
 (define-preference auto-wrap? #f)
 
 (define-preference initial-width 1024)
@@ -34,9 +33,10 @@
 (define-colour fg-colour '(#xEE #xEE #xEE))
 (define-colour bg-colour '(#x11 #x11 #x11))
 
-(define-colour menu-colour '(#xAA #xAA #xEE))
-(define-colour link-colour '(#xAA #xEE #xAA))
-(define-colour error-colour '(#xEE #xAA #xAA))
+(define-colour menu-colour     '(#xAA #xAA #xEE))
+(define-colour link-colour     '(#xAA #xEE #xAA))
+(define-colour error-colour    '(#xEE #xAA #xAA))
 (define-colour document-colour '(#xEE #xEE #xAA))
-(define-colour download-colour '(#xEE #xAA #xEE))
-(define-colour clicked-colour '(#xAA #xEE #xEE))
+(define-colour binary-colour   '(#xAA #xEE #xEE))
+(define-colour image-colour    '(#xEE #xAA #xEE))
+(define-colour clicked-colour  '(#xAA #xAA #xAA))

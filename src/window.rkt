@@ -141,7 +141,6 @@
   (new editor-canvas% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus auto-hscroll auto-vscroll))
-       (scrolls-per-page scrolls-per-page)
        (wheel-step wheel-step)
        ;; Minimum size the canvas can be shrunk to is 16 lines.
        (line-count 16)

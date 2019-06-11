@@ -14,7 +14,8 @@
 (define d-menu (make-object style-delta%))
 (define d-link (make-object style-delta%))
 (define d-document (make-object style-delta%))
-(define d-download (make-object style-delta%))
+(define d-binary (make-object style-delta%))
+(define d-image (make-object style-delta%))
 (define d-clicked (make-object style-delta%))
 
 (define (initialise-styles)
@@ -43,10 +44,14 @@
     (copy d-usual)
     (set-delta-foreground document-colour))
   ;; Binary files we can download
-  (send* d-download
+  (send* d-binary
     (copy d-usual)
-    (set-delta-foreground download-colour))
-  ;; Style after click
+    (set-delta-foreground binary-colour))
+  ;; Images that can be rendered
+  (send* d-image
+    (copy d-usual)
+    (set-delta-foreground image-colour))
+  ;; Style after clicking
   (send* d-clicked
     (copy d-usual)
     (set-delta-foreground clicked-colour)))
@@ -88,7 +93,7 @@
                   (_ (insert-text style str))
                   (after (send page get-start-position)))
               (send* page
-                (set-clickback before after clickback)
+                (set-clickback before after clickback d-clicked)
                 (insert "\n"))))))
     (for-each
      (λ (line)
@@ -129,9 +134,9 @@
                        (go-to (string-append address "\t" query)))))
                  #:decorator "???"))
                (("I" "g" "p" ":")
-                (insert-selector d-download text click #:decorator "img"))
+                (insert-selector d-image text click #:decorator "img"))
                (("4" "5" "6" "9" "P" "d" "s" ";" "<")
-                (insert-selector d-download text click #:decorator "bin"))
+                (insert-selector d-binary text click #:decorator "bin"))
                (("+")
                 (insert-selector d-menu text click #:decorator "dup"))
                (("2" "8" "T")
