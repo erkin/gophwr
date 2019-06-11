@@ -20,36 +20,36 @@
 (define (initialise-styles)
   (send* d-usual
     (set-family 'modern)
-    (set-face *font*)
-    (set-delta 'change-size *font-size*)
-    (set-delta-foreground *fg-colour*)
-    (set-delta-background *bg-colour*))
+    (set-face font-name)
+    (set-delta 'change-size font-size)
+    (set-delta-foreground fg-colour)
+    (set-delta-background bg-colour))
   (send* d-title
     (copy d-usual)
-    (set-delta 'change-size *title-size*))
+    (set-delta 'change-size title-size))
   (send* d-error
     (copy d-usual)
-    (set-delta-foreground *error-colour*))
+    (set-delta-foreground error-colour))
   ;; Menus we can navigate to
   (send* d-menu
     (copy d-usual)
-    (set-delta-foreground *menu-colour*))
+    (set-delta-foreground menu-colour))
   ;; Outgoing (web) links
   (send* d-link
     (copy d-usual)
-    (set-delta-foreground *link-colour*))
+    (set-delta-foreground link-colour))
   ;; Links to text files we can render
   (send* d-document
     (copy d-usual)
-    (set-delta-foreground *document-colour*))
+    (set-delta-foreground document-colour))
   ;; Binary files we can download
   (send* d-download
     (copy d-usual)
-    (set-delta-foreground *download-colour*))
+    (set-delta-foreground download-colour))
   ;; Style after click
   (send* d-clicked
     (copy d-usual)
-    (set-delta-foreground *clicked-colour*)))
+    (set-delta-foreground clicked-colour)))
 
 
 (define (render-text page content go-to)

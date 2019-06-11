@@ -19,9 +19,9 @@
 (define frame
   (new frame%
        (label
-        (string-append *project-name* " \u2014 " address))
-       (width *initial-width*)
-       (height *initial-height*)))
+        (string-append project-name " \u2014 " address))
+       (width initial-width)
+       (height initial-height)))
 
 ;;;; Menubar
 (define menu-bar
@@ -61,7 +61,7 @@
        (callback
         (λ _
           (let* ((filename (put-file "Choose a download location"
-                                     frame *download-folder* (last (string-split address "/")))))
+                                     frame download-folder (last (string-split address "/")))))
             (when filename
               (save-file filename
                          (send page-text get-text)
@@ -78,8 +78,8 @@
        (help-string "Show version and licence info")
        (callback (λ _
                    (message-box
-                    (string-append "About " *project-name*)
-                    (string-join *version-message* "\n") frame
+                    (string-append "About " project-name)
+                    (string-join version-message "\n") frame
                     '(ok no-icon))))))
 
 
@@ -110,7 +110,7 @@
 (define home-key
   (new button% (parent address-pane)
        (label "\u2302") ; House sign
-       (callback (λ _ (go-to *homepage*)))))
+       (callback (λ _ (go-to homepage)))))
 
 (define address-field
   (new text-field% (parent address-pane)
@@ -132,8 +132,8 @@
   (new editor-canvas% (parent frame)
        ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus no-hscroll auto-vscroll))
-       (scrolls-per-page *scrolls-per-page*)
-       (wheel-step *wheel-step*)
+       (scrolls-per-page scrolls-per-page)
+       (wheel-step wheel-step)
        ;; Minimum size the canvas can be shrunk to is 16 lines.
        (line-count 16)
        (stretchable-width #t)
@@ -142,7 +142,7 @@
 (define page-text
   (new text%
    (line-spacing 0.6)
-   (auto-wrap (auto-wrap?))))
+   (auto-wrap auto-wrap?)))
 
 
 ;;; GUI starts here.
@@ -159,7 +159,7 @@
     (change-style d-usual)
     (set-max-undo-history 0))
   (send* page-canvas
-    (set-canvas-background *bg-colour*)
+    (set-canvas-background bg-colour)
     (set-editor page-text)
     (lazy-refresh #t))
 
@@ -184,7 +184,7 @@
 (define (loaded)
   (send frame set-status-text "")
   (send frame set-label
-        (string-append *project-name* " \u2014 " address)) ; em-dash
+        (string-append project-name " \u2014 " address)) ; em-dash
   (send page-text scroll-to-position 0)
   (when (send page-text in-edit-sequence?)
     (send page-text end-edit-sequence))
@@ -196,13 +196,13 @@
   (loaded)
   (send frame set-status-text "Error!")
   (send page-text insert
-        (string-append* *project-name* " error: " strs)))
+        (string-append* project-name " error: " strs)))
 
 (define (make-image-snip image-bytes type)
   (make-object image-snip%
                (make-object bitmap%
                             (open-input-bytes image-bytes)
-                            type *bg-colour* #t)))
+                            type bg-colour #t)))
 
 ;;; Navigation
 (define (refresh)
@@ -290,7 +290,7 @@
   (thread
    (λ ()
      (let ((filename (put-file "Choose a download location"
-                               frame *download-folder* (last (string-split path "/")))))
+                               frame download-folder (last (string-split path "/")))))
        (when filename
          (save-file filename
                     (fetch-file domain port path #:type 'binary)

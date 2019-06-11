@@ -9,20 +9,17 @@
 
 
 (define (display-version)
-  (for-each displayln *version-message*)
+  (for-each displayln version-message)
   (exit null))
 
 (module+ main
   (define addresses
     (command-line
-     #:program *project-name*
-
+     #:program project-name
      #:once-each
      (("--ssl" "--tls")
       "Enable TLS mode"
       (tls-enabled? #t))
-
-     #:once-any
      (("--version" "-v")
       "Show version and licence information"
       (display-version))
@@ -33,7 +30,7 @@
      ;; addresses as separate tabs in the future.
      #:args addresses
      (if (null? addresses)
-         (list *homepage*)
+         (list homepage)
          addresses)))
 
   (when (tls-enabled?)

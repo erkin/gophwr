@@ -1,48 +1,42 @@
 #lang racket/base
 (provide (all-defined-out))
+(require (only-in racket/draw make-color)
+         (only-in racket/file get-preference))
 
-(require (only-in racket/draw make-color))
-
-;;;; These will be adjustable in the options menu.
-
-(define *homepage* "suika.erkin.party:70/1/gophwr")
-
-(define *download-folder* #f)
-
-(define *scrolls-per-page* 500)
-(define *wheel-step* 1)
-
-(define *initial-width* 1024)
-(define *initial-height* 768)
+(define config-file (build-path (find-system-path 'pref-dir) "gophwr.rktd"))
 
 (define tls-enabled? (make-parameter #f))
-(define auto-wrap? (make-parameter #f))
 
-;; A string containing the name of the font
-;; #f for default monospace.
-(define *font* #f)
+;;; Preferences
+(define-syntax-rule (define-preference symbol default)
+  (define symbol
+    (get-preference (quote symbol) (λ () default) 'timestamp config-file)))
 
-(define *font-size* 11)
-(define *title-size* 23)
+(define-preference homepage "suika.erkin.party:70/1/gophwr")
+(define-preference download-folder #f)
 
-;; Besides hexcodes, strings of colour names are accepted as well.
-;; To see a list of colours, try:
-;; (require racket/draw) (for-each displayln (send the-color-database get-names))
+(define-preference scrolls-per-page 500)
+(define-preference wheel-step 1)
+(define-preference auto-wrap? #f)
 
-(define *fg-colour*
-  (make-color #xEE #xEE #xEE))
-(define *bg-colour*
-  (make-color #x11 #x11 #x11))
+(define-preference initial-width 1024)
+(define-preference initial-height 768)
 
-(define *menu-colour*
-  (make-color #xAA #xAA #xEE))
-(define *link-colour*
-  (make-color #xAA #xEE #xAA))
-(define *error-colour*
-  (make-color #xEE #xAA #xAA))
-(define *document-colour*
-  (make-color #xEE #xEE #xAA))
-(define *download-colour*
-  (make-color #xEE #xAA #xEE))
-(define *clicked-colour*
-  (make-color #xAA #xEE #xEE))
+(define-preference font-name #f)
+(define-preference font-size 11)
+(define-preference title-size 23)
+
+;;; Colours
+(define-syntax-rule (define-colour colour rgb)
+  (define colour
+    (apply make-color (get-preference (quote symbol) (λ () rgb) 'timestamp config-file))))
+
+(define-colour fg-colour '(#xEE #xEE #xEE))
+(define-colour bg-colour '(#x11 #x11 #x11))
+
+(define-colour menu-colour '(#xAA #xAA #xEE))
+(define-colour link-colour '(#xAA #xEE #xAA))
+(define-colour error-colour '(#xEE #xAA #xAA))
+(define-colour document-colour '(#xEE #xEE #xAA))
+(define-colour download-colour '(#xEE #xAA #xEE))
+(define-colour clicked-colour '(#xAA #xEE #xEE))

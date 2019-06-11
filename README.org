@@ -1,4 +1,4 @@
-* gophwr v0.3
+* gophwr v0.4
   A graphical gopher browser in =racket/gui=.
 
 *** Project goals
@@ -6,7 +6,11 @@
     resorting to web technologies. No HTML nor CSS under the hood.
 
 ** How to use
+   Install Racket, then run
    ~% racket src/main.rkt [--tls] [address]~
+
+   To configure it, copy the example [[assets/gophwr.rktd][config file]] to your Racket preferences
+   directory (~> (find-system-path 'pref-dir)~).
 
 ** Status
    This project is still under construction, expect occasional breakage.
@@ -22,20 +26,18 @@
     + Save currently viewed page
     + Back/forward page
     + Delegate WWW links to web browser
+    + TLS option
+    + Config file
 
 *** Work in progress
-    + TLS support
-    + Themes
-      + Font settings
-      + Customisable colours
+    + Adjustable TLS support
     + Mouseover/right-click links
-    + Render images
 
 *** Up next
     + Options menu
+    + Bookmarks
     + Duplicate (=+=) types
     + Keyboard shortcuts
-    + Bookmarks
-    + Tabbed navigation
     + Find in page
     + Zooming
+    + Tabbed navigation

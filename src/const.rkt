@@ -2,12 +2,12 @@
 (provide (all-defined-out))
 
 
-(define *project-name* "gophwr")
-(define *project-version* "v0.3.5")
+(define project-name "gophwr")
+(define project-version "v0.4.0")
 
-(define *version-message*
+(define version-message
   (list
-   (string-append *project-name* " " *project-version*)
+   (string-append project-name " " project-version)
    "Copyright (C) 2019 Erkin Batu Altunbaş"
    ""
    "Each file of this project's source code is subject "
