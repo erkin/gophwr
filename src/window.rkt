@@ -258,6 +258,7 @@
            ;; and forth.
            (unless history
              (set! next-address '())
+             (send forward-key enable #f)
              (send back-key enable #t))
            (to-text urn domain port type path))
           ;; 4 and 6 are actually text but we're treating them like
