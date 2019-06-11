@@ -316,45 +316,46 @@
               (not (string=? address (car previous-address))))
       (set! previous-address (cons address previous-address)))))
 
+;; Run stuff in a thread with loading/loaded bells and jingles.
+;; Return void instead of the thread.
+(define (load-file urn stuff)
+  (loading urn)
+  (thread (thunk (stuff) (loaded)))
+  (void))
+
 (define (to-text urn domain port type path)
   (clear-page)
   (update-address urn)
-  (loading urn)
-  ;; Start the thread to fetch the page and display it.
-  (thread
+  (load-file
+   urn
    (thunk
     ((if (member type '("1" "7"))
          render-menu
          render-text)
      page-text (fetch-file domain port path #:type 'text)
-     go-to)
-    (loaded)))
-  (void))
+     go-to))))
 
 (define (to-binary urn domain port type path)
   (loading urn)
-  (thread
+  (load-file
+   urn
    (thunk
     (let ((filename (put-file "Choose a download location"
                               frame download-folder (last (string-split path "/")))))
       (when filename
         (save-file filename
                    (fetch-file domain port path #:type 'binary)
-                   #:mode 'binary)))
-    (loaded)))
-  (void))
+                   #:mode 'binary))))))
 
 (define (to-image urn domain port type path)
   (clear-page)
   (update-address urn)
-  (loading urn)
-  (thread
+  (load-file
+   urn
    (thunk
     (send page-text insert
           (make-image-snip (fetch-file domain port path #:type 'binary)
                            (case type
                              (("I" ":") 'unknown/alpha)
                              (("g") 'gif/alpha)
-                             (("p") 'png/alpha))))
-    (loaded)))
-  (void))
+                             (("p") 'png/alpha)))))))
