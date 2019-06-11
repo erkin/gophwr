@@ -42,6 +42,8 @@
        (go-back))
       ((and meta? (eq? key-code 'right))
        (go-forward))
+      ((and meta? (eq? key-code 'home))
+       (go-to homepage))
       ((and ctrl? (eq? key-code #\l))
        (send address-field focus)
        (send (send address-field get-editor) select-all))
@@ -326,7 +328,8 @@
          render-text)
      page-text (fetch-file domain port path #:type 'text)
      go-to)
-    (loaded))))
+    (loaded)))
+  (void))
 
 (define (to-binary urn domain port type path)
   (loading urn)
@@ -338,7 +341,8 @@
         (save-file filename
                    (fetch-file domain port path #:type 'binary)
                    #:mode 'binary)))
-    (loaded))))
+    (loaded)))
+  (void))
 
 (define (to-image urn domain port type path)
   (clear-page)
@@ -352,4 +356,5 @@
                              (("I" ":") 'unknown/alpha)
                              (("g") 'gif/alpha)
                              (("p") 'png/alpha))))
-    (loaded))))
+    (loaded)))
+  (void))
