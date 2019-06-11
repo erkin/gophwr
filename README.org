@@ -21,8 +21,8 @@
    This project is still a work in progress, expect occasional breakage.
    Patches and feedback welcome.
 
-**** The way it looks as of v0.3.4
-     [[https://user-images.githubusercontent.com/591669/58642010-101e3100-8305-11e9-8d09-c392907374ad.png]]
+**** The way it looks as of v0.5.2
+[[https://user-images.githubusercontent.com/591669/59290170-9da43e00-8c80-11e9-8f14-a700c2b2e56b.png]]
 
 *** Features
     + Clickable links in colourful menus
