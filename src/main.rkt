@@ -24,14 +24,11 @@
       "Show version and licence information"
       (display-version))
 
-     ;; Take and return a list of addresses if any argument is given,
-     ;; return the homepage otherwise.
+     ;; List of arguments to navigate to at startup.
      ;; The reason we do it with a list is to be able to handle multiple
      ;; addresses as separate tabs in the future.
      #:args addresses
-     (if (null? addresses)
-         (list homepage)
-         addresses)))
+     addresses))
 
   (when (tls-enabled?)
     (unless ssl-available?
@@ -41,6 +38,12 @@
       (exit 1)))
 
   (initialise-window)
-  
-  ;; Automatically navigate to the first argument at startup.
-  (go-to (car addresses) #:history #t))
+
+  (if (null? addresses)
+      ;; Go to homepage if no argument is given.
+      (if homepage
+          (go-to homepage #:history #t)
+          ;; Blank page if homepage is #f.
+          (clear-page))
+      ;; Go to first address given at commandline.
+      (go-to (car addresses) #:history #t)))

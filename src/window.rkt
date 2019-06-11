@@ -1,5 +1,5 @@
 #lang racket/gui
-(provide initialise-window go-to)
+(provide initialise-window go-to clear-page)
 
 (require (only-in openssl ssl-available?))
 
