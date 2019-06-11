@@ -15,9 +15,7 @@
    ~% bin/gophwr [--tls] [address]~
 
    To configure it, copy the example [[assets/gophwr.rktd][config file]] to your Racket preferences
-   directory. (You can omit lines you aren't interested in.)
-
-   ~> (find-system-path 'pref-dir)~
+   directory. See more [[https://github.com/erkin/gophwr/wiki/Config-file][on the wiki]].
 
 ** Status
    This project is still a work in progress, expect occasional breakage.

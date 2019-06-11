@@ -43,4 +43,4 @@
   (initialise-window)
   
   ;; Automatically navigate to the first argument at startup.
-  (go-to (car addresses)))
+  (go-to (car addresses) #:history #t))

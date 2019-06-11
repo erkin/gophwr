@@ -95,16 +95,18 @@
 ;;;; Keys
 (define back-key
   (new button% (parent address-pane)
-       (label "\u2397")
+       (label "\u2b05") ; Back arrow
+       (enabled #f)
        (callback (λ _ (go-back)))))
 (define forward-key
   (new button% (parent address-pane)
-       (label "\u2398")
+       (label "\u2b95") ; Forward arrow
+       (enabled #f)
        (callback (λ _ (go-forward)))))
 
 (define refresh-key
   (new button% (parent address-pane)
-       (label "\u21bb") ; Clockwise arrow
+       (label "\u2b6e") ; Clockwise arrow
        (callback (λ _ (refresh)))))
 
 (define home-key
@@ -206,7 +208,8 @@
 
 ;;; Navigation
 (define (refresh)
-  (go-to address))
+  ;; Keep history stacks intact when refreshing.
+  (go-to address #:history #t))
 
 (define (go-back)
   ;; Note that previous-address contains the current address as well.
@@ -216,6 +219,9 @@
     (let ((prev (cadr previous-address)))
       (set! previous-address (cddr previous-address))
       ;; To make sure the forward stack isn't munged.
+      (when (null? previous-address)
+        (send back-key enable #f))
+      (send forward-key enable #t)
       (go-to prev #:history #t))))
 
 (define (go-forward)
@@ -223,6 +229,9 @@
               (null? next-address))
     (let ((next (car next-address)))
       (set! next-address (cdr next-address))
+      (when (null? next-address)
+        (send forward-key enable #f))
+      (send back-key enable #t)
       (go-to next #:history #t))))
 
 (define (go)
@@ -248,7 +257,8 @@
            ;; Don't discard the next address stack if we're moving back
            ;; and forth.
            (unless history
-             (set! next-address '()))
+             (set! next-address '())
+             (send back-key enable #t))
            (to-text urn domain port type path))
           ;; 4 and 6 are actually text but we're treating them like
           ;; binary. Watch out for a stray '.' at the end!
