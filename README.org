@@ -5,18 +5,6 @@
     My aim is to create a decent gopher client suitable for daily use without
     resorting to web technologies. No HTML nor CSS under the hood.
 
-** How to use
-   Install Racket, then run:
-
-   ~% racket src/main.rkt [--tls] [address]~
-
-   Alternatively, fetch a [[https://github.com/erkin/gophwr/releases][binary release]] (might be outdated) and run it:
-
-   ~% bin/gophwr [--tls] [address]~
-
-   To configure it, copy the example [[assets/gophwr.rktd][config file]] to your Racket preferences
-   directory. See more [[https://github.com/erkin/gophwr/wiki/Config-file][on the wiki]].
-
 ** Status
    This project is still a work in progress, expect occasional breakage.
    Patches and feedback welcome.
@@ -46,3 +34,28 @@
     + Find in page
     + Zooming
     + Tabbed navigation
+
+** Usage
+*** How to run
+    Install Racket, then run:
+
+    ~% racket src/main.rkt [--tls] [address]~
+
+    (Running ~% raco make src/main.rkt~ beforehand can make it launch faster.)
+
+    If you don't want to install Racket, you can fetch a [[https://github.com/erkin/gophwr/releases][binary release]] (might be outdated) and run it:
+
+    ~% bin/gophwr [--tls] [address]~
+
+    To configure it, copy the example [[assets/gophwr.rktd][config file]] to your Racket preferences
+    directory. See more [[https://github.com/erkin/gophwr/wiki/Config-file][on the wiki]].
+
+*** Installation
+    You can install it directly to your local Racket setup:
+
+    ~% raco pkg install --user https://github.com/erkin/gophwr.git~
+
+    Alternatively, if you're using the Nix package manager, simply run
+    ~% nix-build~
+    in the repo and it will build a package for you.
+    (Courtesy of [[https://github.com/fractalide/racket2nix][racket2nix]].)
