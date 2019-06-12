@@ -1,11 +1,10 @@
 #lang racket
 (provide fetch-file)
 
-(require "config.rkt"
-         "const.rkt")
-
 (require (only-in racket/tcp tcp-connect/enable-break))
 (require (only-in    openssl ssl-connect/enable-break))
+(require "config.rkt"
+         "const.rkt")
 
 
 ;;; \r\n is mandatory in Gopher.

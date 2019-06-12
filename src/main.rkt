@@ -1,8 +1,6 @@
 #lang racket/base
-
-(require racket/cmdline)
-(require (only-in openssl ssl-available? ssl-load-fail-reason))
-
+(require (only-in racket/cmdline command-line)
+         (only-in openssl ssl-available? ssl-load-fail-reason))
 (require "const.rkt"
          "config.rkt"
          "window.rkt")
@@ -10,7 +8,7 @@
 
 (define (display-version)
   (for-each displayln version-message)
-  (exit null))
+  (exit))
 
 (module+ main
   (define addresses

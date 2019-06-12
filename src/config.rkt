@@ -1,9 +1,14 @@
 #lang racket/base
-(provide (all-defined-out))
+(provide (except-out (all-defined-out)
+                     define-preference
+                     define-colour))
+
 (require (only-in racket/draw make-color)
          (only-in racket/file get-preference))
+(require "const.rkt")
 
-(define config-file (build-path (find-system-path 'pref-dir) "gophwr.rktd"))
+
+(define config-file (build-path (find-system-path 'pref-dir) (string-append project-name ".rktd")))
 
 (define tls-enabled? (make-parameter #f))
 

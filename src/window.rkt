@@ -1,8 +1,8 @@
 #lang racket/gui
+
 (provide initialise-window go-to clear-page)
 
 (require (only-in openssl ssl-available?))
-
 (require "config.rkt"
          "const.rkt"
          "entry.rkt"
@@ -99,7 +99,7 @@
        (help-string "Exit gophwr")
        (shortcut #\q)
        (callback (λ _
-                   (exit null))))
+                   (exit))))
   (new menu-item% (parent help-menu)
        (label "&About")
        (help-string "Show version and licence info")
@@ -122,13 +122,13 @@
 ;;;; Keys
 (define back-key
   (new button% (parent address-pane)
-       (label "\u2b05") ; Back arrow
+       (label "\u2190") ; Back arrow
        (enabled #f)
        (horiz-margin 0)
        (callback (λ _ (go-back)))))
 (define forward-key
   (new button% (parent address-pane)
-       (label "\u27a1") ; Forward arrow
+       (label "\u2192") ; Forward arrow
        (enabled #f)
        (horiz-margin 0)
        (callback (λ _ (go-forward)))))
