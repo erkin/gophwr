@@ -1,9 +1,10 @@
-#lang racket/gui
+#lang racket/base
 (provide render-menu render-text
          save-file initialise-styles
          d-usual d-error)
 
-(require (only-in net/sendurl send-url))
+(require racket/gui/base racket/class racket/match)
+(require net/sendurl)
 (require "config.rkt"
          "parser.rkt")
 

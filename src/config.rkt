@@ -3,8 +3,7 @@
                      define-preference
                      define-colour))
 
-(require (only-in racket/draw make-color)
-         (only-in racket/file get-preference))
+(require racket/draw racket/file)
 (require "const.rkt")
 
 

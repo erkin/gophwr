@@ -1,5 +1,8 @@
-#lang racket
+#lang racket/base
 (provide parse-urn parse-selector)
+
+(require racket/contract/base racket/contract/region
+         racket/string racket/match)
 
 
 ;; We're using a simple in-house parser because the official one is too
@@ -43,7 +46,7 @@
 
 (define/contract (parse-urn urn)
   ;; ("domain:port/type/path" "domain" port "type" "/path")
-  (-> string? (list/c string? string? port-number? string? string?))
+  (-> string? (list/c string? string? exact-positive-integer? string? string?))
   (let ((parsed-urn (regexp-match magic-regexp urn)))
     (if parsed-urn
         (match-let (((list address domain port _ type path) parsed-urn))

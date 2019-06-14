@@ -1,8 +1,11 @@
-#lang racket/gui
+#lang racket/base
 
 (provide initialise-window go-to clear-page)
 
-(require (only-in openssl ssl-available?))
+(require racket/contract/base racket/contract/region
+         racket/gui/base racket/list racket/match
+         racket/class racket/string)
+(require openssl)
 (require "config.rkt"
          "const.rkt"
          "entry.rkt"
@@ -320,7 +323,9 @@
 ;; Return void instead of the thread.
 (define (load-file urn stuff)
   (loading urn)
-  (thread (thunk (stuff) (loaded)))
+  (thread (λ ()
+            (stuff)
+            (loaded)))
   (void))
 
 (define (to-text urn domain port type path)
@@ -328,7 +333,7 @@
   (update-address urn)
   (load-file
    urn
-   (thunk
+   (λ ()
     ((if (member type '("1" "7"))
          render-menu
          render-text)
@@ -339,7 +344,7 @@
   (loading urn)
   (load-file
    urn
-   (thunk
+   (λ ()
     (let ((filename (put-file "Choose a download location"
                               frame download-folder (last (string-split path "/")))))
       (when filename
@@ -352,7 +357,7 @@
   (update-address urn)
   (load-file
    urn
-   (thunk
+   (λ ()
     (send page-text insert
           (make-image-snip (fetch-file domain port path #:type 'binary)
                            (case type

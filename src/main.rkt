@@ -1,6 +1,6 @@
 #lang racket/base
-(require (only-in racket/cmdline command-line)
-         (only-in openssl ssl-available? ssl-load-fail-reason))
+(require racket/cmdline)
+(require (only-in openssl ssl-available? ssl-load-fail-reason))
 (require "const.rkt"
          "config.rkt"
          "window.rkt")
@@ -27,12 +27,11 @@
      ;; addresses as separate tabs in the future.
      #:args addresses
      addresses))
-
   (when (tls-enabled?)
     (unless ssl-available?
-      (displayln "OpenSSL is not available."
-                 ssl-load-fail-reason
-                 "Aborting.")
+      (raise-user-error "OpenSSL is not available."
+                        ssl-load-fail-reason
+                        "Aborting.")
       (exit 1)))
 
   (initialise-window)
