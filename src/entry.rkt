@@ -79,9 +79,7 @@
             (send* page
               ;; Set the desired style before inserting the text
               (change-style style)
-              (insert str)
-              ;; Then reset it.
-              (change-style d-usual))))
+              (insert str))))
          (insert-selector
           (λ (style str clickback
                     #:decorator (decorator #f)
@@ -146,4 +144,6 @@
                 (insert-text d-error
                              (string-append "Unknown selector type: " type))
                 (insert-text d-usual (string-append " " text "\n"))))))))
-     content)))
+     content))
+  ;; Reset style after rendering the page.
+  (send page change-style d-usual))
