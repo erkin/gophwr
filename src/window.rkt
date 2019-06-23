@@ -79,38 +79,41 @@
                        (tls-enabled? #t)
                        (tls-enabled? #f))))))
 
+(define (quit)
+  (custodian-shutdown-all (current-custodian))
+  (queue-callback exit #t))
+
+(define (about)
+  (message-box
+   (string-append "About " project-name)
+   (string-join version-message "\n") frame
+   '(ok no-icon)))
+
 (define (populate-menu-bar)
   (unless ssl-available?
     (send tls-toggle enable #f))
-  ;; Save page to file.
-  ;; Note that this saves the formatted version of menus.
+
   (new menu-item% (parent file-menu)
-       (label "&Save")
-       (help-string "Save current file to disk")
+       (label "&Save page")
+       (help-string "Save page to device")
        (shortcut #\s)
        (callback
         (λ _
-          (let* ((filename (put-file "Choose a download location"
-                                     frame download-folder (last (string-split address "/")))))
-            (when filename
-              (save-file filename
-                         (send page-text get-text)
-                         #:mode 'text))))))
+          (save-page))))
+
   (new separator-menu-item% (parent file-menu))
   (new menu-item% (parent file-menu)
        (label "&Quit")
        (help-string "Exit gophwr")
        (shortcut #\q)
        (callback (λ _
-                   (exit))))
+                   (quit))))
   (new menu-item% (parent help-menu)
        (label "&About")
        (help-string "Show version and licence info")
        (callback (λ _
-                   (message-box
-                    (string-append "About " project-name)
-                    (string-join version-message "\n") frame
-                    '(ok no-icon))))))
+                   (about)))))
+
 
 
 ;;;; Address box
@@ -188,6 +191,9 @@
 
   (initialise-styles)
   (populate-menu-bar)
+  (populate-right-click-menu-bar)
+  (application-quit-handler quit)
+  (application-about-handler about)
 
   (send* page-text
     (change-style d-usual)
@@ -201,6 +207,15 @@
   (send frame create-status-line)
   (send frame show #t))
 
+;;; Save current page
+;; Note that this saves the formatted version of menus.
+(define (save-page)
+  (let* ((filename (put-file "Choose a download location"
+                             frame download-folder (last (string-split address "/")))))
+    (when filename
+      (save-file filename
+                 (send page-text get-text)
+                 #:mode 'text))))
 
 ;;; Frame and page details
 (define (clear-page)
@@ -212,7 +227,7 @@
      (string-append "\u231b Loading " urn)) ; hourglass
     (modified #t))
   (send address-field set-value urn)
-  (send page-text begin-edit-sequence)
+  (send page-text begin-edit-sequence #f)
   (send page-canvas enable #f)
   (begin-busy-cursor))
 

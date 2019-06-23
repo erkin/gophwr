@@ -14,9 +14,10 @@
 (define/contract (fetch-file host port path #:type type)
   (-> string? exact-positive-integer? string? #:type symbol?
       (or/c (listof string?) bytes?))
-  ;; Try to connect with SSL if it's enabled.
+  ;; Try to connect with TLS if it's enabled.
   (let-values (((in out)
-                ;; TODO: Fallback to plaintext if TLS handshake fails.
+                ;; TODO: Add an option to retry with clear connection if
+                ;; TLS handshake fails.
                 ((if (tls-enabled?)
                      ssl-connect/enable-break
                      tcp-connect/enable-break)
@@ -29,7 +30,7 @@
     (flush-output out)
     (case type
       ((text) (let ((result (port->lines in)))
-                (if result
+                (if (pair? result)
                     (begin
                       (close-output-port out)
                       result)
