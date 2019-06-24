@@ -50,34 +50,12 @@
       ((and ctrl? (eq? key-code #\l))
        (send address-field focus)
        (send (send address-field get-editor) select-all))
+      ;; Return #f if we don't recognise this key code so that it can be
+      ;; delegated to lower levels in on-subwindow-char (such as the
+      ;; canvas or the text).
       (else
        #f))))
 
-;;;; Menubar
-(define menu-bar
-  (new menu-bar% (parent frame)))
-
-(define file-menu
-  (new menu% (parent menu-bar)
-       (label "&File")))
-
-(define tools-menu
-  (new menu% (parent menu-bar)
-       (label "&Tools")))
-
-(define help-menu
-  (new menu% (parent menu-bar)
-       (label "&Help")))
-
-(define tls-toggle
-  (new checkable-menu-item% (parent tools-menu)
-       (label "Enable TL&S")
-       (help-string "Exclusively use TLS when connecting to gopherholes")
-       (checked (tls-enabled?))
-       (callback (λ (item event)
-                   (if (send item is-checked?)
-                       (tls-enabled? #t)
-                       (tls-enabled? #f))))))
 
 (define (quit)
   (custodian-shutdown-all (current-custodian))
@@ -90,30 +68,60 @@
    '(ok no-icon)))
 
 (define (populate-menu-bar)
-  (unless ssl-available?
-    (send tls-toggle enable #f))
+  ;;;; Menubar
+  (let* ((menu-bar (new menu-bar% (parent frame)))
+         (file-menu (new menu% (parent menu-bar) (label "&File")))
+         (tools-menu (new menu% (parent menu-bar) (label "&Tools")))
+         (help-menu (new menu% (parent menu-bar) (label "&Help")))
+         (tls-toggle
+          (new checkable-menu-item% (parent tools-menu)
+               (label "Enable TL&S")
+               (help-string "Exclusively use TLS when connecting to gopherholes")
+               (checked (tls-enabled?))
+               (callback (λ (item event)
+                           (if (send item is-checked?)
+                               (tls-enabled? #t)
+                               (tls-enabled? #f)))))))
+    ;; Grey out TLS toggle button if TLS is not available in the system.
+    (unless ssl-available?
+      (send tls-toggle enable #f))
+    (new menu-item% (parent file-menu)
+         (label "&Save page")
+         (help-string "Save page to device")
+         (shortcut #\s)
+         (callback
+          (λ _
+            (save-page))))
+    (new separator-menu-item% (parent file-menu))
+    (new menu-item% (parent file-menu)
+         (label "&Quit")
+         (help-string "Exit gophwr")
+         (shortcut #\q)
+         (callback (λ _
+                     (quit))))
+    (new menu-item% (parent help-menu)
+         (label "&About")
+         (help-string "Show version and licence info")
+         (callback (λ _
+                     (about))))))
 
-  (new menu-item% (parent file-menu)
+(define right-click-menu (new popup-menu%))
+
+(define (populate-right-click-menu-bar)
+  (new menu-item% (parent right-click-menu)
        (label "&Save page")
        (help-string "Save page to device")
        (shortcut #\s)
        (callback
         (λ _
           (save-page))))
-
-  (new separator-menu-item% (parent file-menu))
-  (new menu-item% (parent file-menu)
-       (label "&Quit")
-       (help-string "Exit gophwr")
-       (shortcut #\q)
-       (callback (λ _
-                   (quit))))
-  (new menu-item% (parent help-menu)
-       (label "&About")
-       (help-string "Show version and licence info")
-       (callback (λ _
-                   (about)))))
-
+  (new menu-item% (parent right-click-menu)
+       (label "Select &All")
+       (help-string "Select all text in page")
+       (shortcut #\a)
+       (callback
+        (λ _
+          (send page-text select-all)))))
 
 
 ;;;; Address box
@@ -334,14 +342,13 @@
               (not (string=? address (car previous-address))))
       (set! previous-address (cons address previous-address)))))
 
-;; Run stuff in a thread with loading/loaded bells and jingles.
-;; Return void instead of the thread.
+;; Run stuff in a thread, sandwiched between preparation and
+;; cleanup procedures. Return void.
 (define (load-file urn stuff)
-  (loading urn)
-  (thread (λ ()
-            (stuff)
-            (loaded)))
-  (void))
+  (void
+   (thread
+    (λ ()
+      (loading urn) (stuff) (loaded)))))
 
 (define (to-text urn domain port type path)
   (clear-page)
