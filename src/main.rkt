@@ -41,6 +41,6 @@
       (if homepage
           (go-to homepage #:history #t)
           ;; Blank page if homepage is #f.
-          (clear-page))
+          (clear-page page-text))
       ;; Go to first address given at commandline.
       (go-to (car addresses) #:history #t)))

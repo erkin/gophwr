@@ -1,6 +1,6 @@
 #lang racket/base
 
-(provide initialise-window go-to clear-page)
+(provide initialise-window go-to clear-page page-text)
 
 (require racket/contract/base racket/contract/region
          racket/gui/base racket/list racket/match
@@ -46,10 +46,12 @@
       ((and meta? (eq? key-code 'right))
        (go-forward))
       ((and meta? (eq? key-code 'home))
-       (go-to homepage))
+       (go-home))
       ((and ctrl? (eq? key-code #\l))
        (send address-field focus)
        (send (send address-field get-editor) select-all))
+      ((and ctrl? (eq? key-code #\f))
+       (find-in-page page-text))
       ;; Return #f if we don't recognise this key code so that it can be
       ;; delegated to lower levels in on-subwindow-char (such as the
       ;; canvas or the text).
@@ -66,6 +68,29 @@
    (string-append "About " project-name)
    (string-join version-message "\n") frame
    '(ok no-icon)))
+
+(define (find-in-page page)
+  (unless (send page in-edit-sequence?)
+    (let ((search-string
+           (get-text-from-user "Find" "Find in page"
+                               frame "" '(disallow-invalid)
+                               #:validate non-empty-string?)))
+      ;; Do nothing if the user clicks cancel.
+      (when search-string
+        (let ((search-result (send page find-string search-string)))
+          ;; Return void because we don't care about the result.
+          (void
+           (if search-result
+               ;; Scroll to the position of the string.
+               (send page scroll-to-position search-result #f
+                     (+ search-result (string-length search-string))
+                     'start)
+               ;; Break the bad news to the user.
+               (message-box
+                "Not found"
+                (string-append "\"" search-string "\""
+                               " not found in current page.")
+                frame '(ok caution)))))))))
 
 (define (populate-menu-bar)
   ;;;; Menubar
@@ -85,13 +110,15 @@
     ;; Grey out TLS toggle button if TLS is not available in the system.
     (unless ssl-available?
       (send tls-toggle enable #f))
+
+    ;; File menu
     (new menu-item% (parent file-menu)
          (label "&Save page")
          (help-string "Save page to device")
          (shortcut #\s)
          (callback
           (λ _
-            (save-page))))
+            (save-page page-text))))
     (new separator-menu-item% (parent file-menu))
     (new menu-item% (parent file-menu)
          (label "&Quit")
@@ -99,6 +126,16 @@
          (shortcut #\q)
          (callback (λ _
                      (quit))))
+
+    ;; Tools menu
+    (new separator-menu-item% (parent tools-menu))
+    (new menu-item% (parent tools-menu)
+         (label "&Find")
+         (help-string "Find string in page")
+         (callback (λ _
+                     (find-in-page page-text))))
+
+    ;; Help menu
     (new menu-item% (parent help-menu)
          (label "&About")
          (help-string "Show version and licence info")
@@ -114,7 +151,7 @@
        (shortcut #\s)
        (callback
         (λ _
-          (save-page))))
+          (save-page page-text))))
   (new menu-item% (parent right-click-menu)
        (label "Select &All")
        (help-string "Select all text in page")
@@ -157,7 +194,7 @@
   (new button% (parent address-pane)
        (label "\u2302") ; House sign
        (horiz-margin 0)
-       (callback (λ _ (go-to homepage)))))
+       (callback (λ _ (go-home)))))
 
 (define address-field
   (new text-field% (parent address-pane)
@@ -179,7 +216,6 @@
 ;;;; Page view
 (define page-canvas
   (new editor-canvas% (parent frame)
-       ;; I need a better way to handle auto-wrap/hscroll
        (style '(no-focus auto-hscroll auto-vscroll))
        (wheel-step wheel-step)
        (stretchable-width #t)
@@ -196,6 +232,9 @@
    (λ (str ex)
      (loaded)
      (error-page str)))
+
+  ;; Select means copy for X11.
+  (editor-set-x-selection-mode #t)
 
   (initialise-styles)
   (populate-menu-bar)
@@ -217,17 +256,17 @@
 
 ;;; Save current page
 ;; Note that this saves the formatted version of menus.
-(define (save-page)
+(define (save-page page)
   (let* ((filename (put-file "Choose a download location"
                              frame download-folder (last (string-split address "/")))))
     (when filename
       (save-file filename
-                 (send page-text get-text)
+                 (send page get-text)
                  #:mode 'text))))
 
 ;;; Frame and page details
-(define (clear-page)
-  (send page-text erase))
+(define (clear-page page)
+  (send page erase))
 
 (define (loading urn)
   (send* frame
@@ -245,14 +284,14 @@
     (set-label
      (string-append project-name " \u2014 " address)) ; em-dash
     (modified #f))
-  (send page-text scroll-to-position 0)
+  (send page-text set-position 0)
   (when (send page-text in-edit-sequence?)
     (send page-text end-edit-sequence))
   (send page-canvas enable #t)
   (end-busy-cursor))
 
 (define (error-page . strs)
-  (clear-page)
+  (clear-page page-text)
   (loaded)
   (send frame set-status-text "Error!")
   (send* page-text
@@ -270,6 +309,9 @@
 (define (refresh)
   ;; Keep history stacks intact when refreshing.
   (go-to address #:history #t))
+
+(define (go-home)
+  (go-to homepage))
 
 (define (go-back)
   ;; Note that previous-address contains the current address as well.
@@ -345,18 +387,16 @@
 ;; Run stuff in a thread, sandwiched between preparation and
 ;; cleanup procedures. Return void.
 (define (load-file urn stuff)
-  (void
-   (thread
-    (λ ()
-      (loading urn) (stuff) (loaded)))))
+  (loading urn)
+  (void (thread (λ () (stuff) (loaded)))))
 
 (define (to-text urn domain port type path)
-  (clear-page)
+  (clear-page page-text)
   (update-address urn)
   (load-file
    urn
    (λ ()
-    ((if (member type '("1" "7"))
+     ((if (member type '("1" "7"))
          render-menu
          render-text)
      page-text (fetch-file domain port path #:type 'text)
@@ -375,14 +415,14 @@
                    #:mode 'binary))))))
 
 (define (to-image urn domain port type path)
-  (clear-page)
+  (clear-page page-text)
   (update-address urn)
   (load-file
    urn
    (λ ()
-    (send page-text insert
-          (make-image-snip (fetch-file domain port path #:type 'binary)
-                           (case type
-                             (("I" ":") 'unknown/alpha)
-                             (("g") 'gif/alpha)
-                             (("p") 'png/alpha)))))))
+     (send page-text insert
+           (make-image-snip (fetch-file domain port path #:type 'binary)
+                            (case type
+                              (("I" ":") 'unknown/alpha)
+                              (("g") 'gif/alpha)
+                              (("p") 'png/alpha)))))))
