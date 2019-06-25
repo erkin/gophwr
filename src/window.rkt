@@ -52,6 +52,12 @@
        (send (send address-field get-editor) select-all))
       ((and ctrl? (eq? key-code #\f))
        (find-in-page page-text))
+      ;; Undocumented secret keybinding to trigger garbage collection.
+      ;; This won't ever be necessary, but it's useful for tracking
+      ;; memory usage.
+      ((and ctrl? meta? (eq? key-code #\g))
+       (unless (send page-text in-edit-sequence?)
+         (collect-garbage)))
       ;; Return #f if we don't recognise this key code so that it can be
       ;; delegated to lower levels in on-subwindow-char (such as the
       ;; canvas or the text).
@@ -92,11 +98,11 @@
       (when (non-empty-string? search-string)
         (let ((search-results (send page find-string-all search-string
                                     'forward 'start 'eof #t #f)))
-          ;; Return void because we don't care about the result.
           (if (pair? search-results)
               (highlight-positions page search-results
                                    (string-length search-string))
               ;; Break the bad news to the user.
+              ;; Return void because we don't care about the result.
               (void
                (message-box
                 "Not found"
@@ -116,9 +122,7 @@
                (help-string "Exclusively use TLS when connecting to gopherholes")
                (checked (tls-enabled?))
                (callback (λ (item event)
-                           (if (send item is-checked?)
-                               (tls-enabled? #t)
-                               (tls-enabled? #f)))))))
+                           (tls-enabled? (send item is-checked?)))))))
     ;; Grey out TLS toggle button if TLS is not available in the system.
     (unless ssl-available?
       (send tls-toggle enable #f))
