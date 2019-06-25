@@ -69,23 +69,35 @@
    (string-join version-message "\n") frame
    '(ok no-icon)))
 
+(define (clear-selection page)
+  (send page set-position 0 'same #f #f 'local))
+
+(define (highlight-positions page positions len)
+  ;; Hilite and scroll to the first position.
+  (send page set-position-bias-scroll 'start
+        (car positions) (+ (car positions) len) #f #t 'local)
+  (for-each (λ (pos)
+              ;; A silly little trick until I figure out a way to do
+              ;; persistent highlighting.
+              (sleep/yield 0.2)
+              (send page flash-on pos (+ pos len) #f #t 200))
+            (cdr positions)))
+
 (define (find-in-page page)
+  (clear-selection page)
   (unless (send page in-edit-sequence?)
     (let ((search-string
-           (get-text-from-user "Find" "Find in page"
-                               frame "" '(disallow-invalid)
-                               #:validate non-empty-string?)))
+           (get-text-from-user "Find" "Find string in page" frame)))
       ;; Do nothing if the user clicks cancel.
-      (when search-string
-        (let ((search-result (send page find-string search-string)))
+      (when (non-empty-string? search-string)
+        (let ((search-results (send page find-string-all search-string
+                                    'forward 'start 'eof #t #f)))
           ;; Return void because we don't care about the result.
-          (void
-           (if search-result
-               ;; Scroll to the position of the string.
-               (send page scroll-to-position search-result #f
-                     (+ search-result (string-length search-string))
-                     'start)
-               ;; Break the bad news to the user.
+          (if (pair? search-results)
+              (highlight-positions page search-results
+                                   (string-length search-string))
+              ;; Break the bad news to the user.
+              (void
                (message-box
                 "Not found"
                 (string-append "\"" search-string "\""
@@ -242,12 +254,11 @@
   (application-quit-handler quit)
   (application-about-handler about)
 
-  (send* page-text
-    (change-style d-usual)
-    (set-max-undo-history 0))
+  (send page-text set-max-undo-history 0)
   (send* page-canvas
     (set-canvas-background bg-colour)
     (set-editor page-text)
+    (force-display-focus #t)
     (lazy-refresh #t))
 
   ;; Here we go!
