@@ -12,11 +12,23 @@
          "gopher.rkt"
          "parser.rkt")
 
+
 ;;; The current page address
 (define address "")
 ;;; Pseudostacks that hold previous and next addresses
 (define previous-address '())
 (define next-address '())
+
+
+(define (quit)
+  (custodian-shutdown-all (current-custodian))
+  (queue-callback exit #t))
+
+(define (about)
+  (message-box
+   (string-append "About " project-name)
+   (string-join version-message "\n") frame
+   '(ok no-icon)))
 
 ;;; Main window
 ;; We're overriding frame% to be able to implement window-wide
@@ -63,17 +75,6 @@
       ;; canvas or the text).
       (else
        #f))))
-
-
-(define (quit)
-  (custodian-shutdown-all (current-custodian))
-  (queue-callback exit #t))
-
-(define (about)
-  (message-box
-   (string-append "About " project-name)
-   (string-join version-message "\n") frame
-   '(ok no-icon)))
 
 (define (clear-selection page)
   (send page set-position 0 'same #f #f 'local))
@@ -160,15 +161,15 @@
 
 (define right-click-menu (new popup-menu%))
 
-(define (populate-right-click-menu-bar)
-  (new menu-item% (parent right-click-menu)
+(define (populate-right-click-menu-bar menu)
+  (new menu-item% (parent menu)
        (label "&Save page")
        (help-string "Save page to device")
        (shortcut #\s)
        (callback
         (λ _
           (save-page page-text))))
-  (new menu-item% (parent right-click-menu)
+  (new menu-item% (parent menu)
        (label "Select &All")
        (help-string "Select all text in page")
        (shortcut #\a)
@@ -252,9 +253,6 @@
   ;; Select means copy for X11.
   (editor-set-x-selection-mode #t)
 
-  (initialise-styles)
-  (populate-menu-bar)
-  (populate-right-click-menu-bar)
   (application-quit-handler quit)
   (application-about-handler about)
 
@@ -265,6 +263,10 @@
     (force-display-focus #t)
     (lazy-refresh #t))
 
+  (initialise-styles)
+  (populate-menu-bar)
+  (populate-right-click-menu-bar right-click-menu)
+
   ;; Here we go!
   (send frame create-status-line)
   (send frame show #t))
@@ -272,12 +274,11 @@
 ;;; Save current page
 ;; Note that this saves the formatted version of menus.
 (define (save-page page)
-  (let* ((filename (put-file "Choose a download location"
-                             frame download-folder (last (string-split address "/")))))
-    (when filename
-      (save-file filename
-                 (send page get-text)
-                 #:mode 'text))))
+  (when-let (filename (put-file "Choose a download location"
+                                frame download-folder (last (string-split address "/"))))
+            (save-file filename
+                       (send page get-text)
+                       #:mode 'text)))
 
 ;;; Frame and page details
 (define (clear-page page)
@@ -422,12 +423,11 @@
   (load-file
    urn
    (λ ()
-    (let ((filename (put-file "Choose a download location"
-                              frame download-folder (last (string-split path "/")))))
-      (when filename
-        (save-file filename
-                   (fetch-file domain port path #:type 'binary)
-                   #:mode 'binary))))))
+     (when-let (filename (put-file "Choose a download location"
+                                   frame download-folder (last (string-split path "/"))))
+               (save-file filename
+                          (fetch-file domain port path #:type 'binary)
+                          #:mode 'binary)))))
 
 (define (to-image urn domain port type path)
   (clear-page page-text)

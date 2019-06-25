@@ -5,7 +5,8 @@
 
 (require racket/gui/base racket/class racket/match)
 (require net/sendurl)
-(require "config.rkt"
+(require "const.rkt"
+         "config.rkt"
          "parser.rkt")
 
 
@@ -128,9 +129,8 @@
                 (insert-selector
                  d-menu text
                  (λ _
-                   (let ((query (get-text-from-user "Query" text)))
-                     (when query
-                       (go-to (string-append address "\t" query)))))
+                   (when-let (query (get-text-from-user "Query" text))
+                             (go-to (string-append address "\t" query))))
                  #:decorator "???"))
                (("I" "g" "p" ":")
                 (insert-selector d-image text click #:decorator "img"))

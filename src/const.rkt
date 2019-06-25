@@ -14,3 +14,11 @@
    "to the terms of the Mozilla Public Licence v2.0"
    "If a copy of the MPL was not distributed with this "
    "file, you can obtain one at https://mozilla.org/MPL/2.0/"))
+
+(define-syntax-rule (if-let (value condition) yes no)
+  (let ((value condition))
+    (if value yes no)))
+
+(define-syntax-rule (when-let (value condition) . body)
+  (let ((value condition))
+    (when value . body)))
