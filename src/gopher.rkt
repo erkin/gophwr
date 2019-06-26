@@ -20,8 +20,11 @@
                 ;; TLS handshake fails.
                 (cond
                   ;; https://github.com/erkin/gophwr/wiki/TLS#100k-convention
-                  ((and ssl-available? (> port 100000))
-                   (ssl-connect/enable-break host (- port 100000)))
+                  ((> port 100000)
+                   (if ssl-available?
+                       (ssl-connect/enable-break host (- port 100000))
+                       (raise-user-error
+                        "This gopherhole requires TLS to connect.")))
                   ((tls-enabled?)
                    (ssl-connect/enable-break host port))
                   (else
