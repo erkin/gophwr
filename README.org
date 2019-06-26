@@ -24,6 +24,7 @@
 
 *** Work in progress
     + Adjustable TLS support
+    + Find in page
     + Mouseover/right-click links
 
 *** Up next
@@ -31,7 +32,6 @@
     + Bookmarks
     + Duplicate (=+=) types
     + Keyboard shortcuts
-    + Find in page
     + Zooming
     + Tabbed navigation
 
