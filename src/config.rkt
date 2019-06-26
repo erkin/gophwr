@@ -3,7 +3,7 @@
                      define-preference
                      define-colour))
 
-(require racket/draw racket/file)
+(require racket/draw racket/file racket/class)
 (require "const.rkt")
 
 
@@ -34,8 +34,14 @@
 ;;; Colours
 (define-syntax-rule (define-colour colour rgb)
   (define colour
-    (apply make-color (get-preference (quote colour) (λ () rgb)
-                                      'timestamp config-file))))
+    (let ((colour (get-preference (quote colour) (λ () rgb) 'timestamp config-file)))
+      (cond ((list? colour)
+             (apply make-color colour))
+            ((string? colour)
+             (make-object color% colour))))))
+
+(define-colour address-bg-colour "white")
+(define-colour address-error-colour "peachpuff")
 
 (define-colour fg-colour '(#xEE #xEE #xEE))
 (define-colour bg-colour '(#x11 #x11 #x11))

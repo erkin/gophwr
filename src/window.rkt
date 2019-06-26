@@ -251,6 +251,7 @@
   (error-display-handler
    (λ (str ex)
      (loaded)
+     (send address-field set-field-background address-error-colour)
      (error-page str)))
 
   ;; Select means copy for X11.
@@ -294,7 +295,9 @@
     (set-status-text
      (string-append "\u231b Loading " urn)) ; hourglass
     (modified #t))
-  (send address-field set-value urn)
+  (send* address-field
+    (set-value urn)
+    (set-field-background address-bg-colour))
   (send page-text begin-edit-sequence #f)
   (send page-canvas enable #f)
   (begin-busy-cursor))
@@ -422,7 +425,8 @@
      ((if (member type '("1" "7"))
           render-menu
           render-text)
-      page-text (fetch-file domain port path #:type 'text)
+      page-text
+      (fetch-file domain port path #:type 'text)
       go-to))))
 
 (define (to-binary urn domain port type path)

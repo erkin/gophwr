@@ -18,7 +18,7 @@
  ;; Wrap around text when it hits the eastern border.
  (auto-wrap? #f)
 
- ;; A string containing the name of the font
+ ;; A string containing the name of the font.
  ;; #f for default monospace.
  (font-name #f)
  (font-size 11)
@@ -48,4 +48,7 @@
  (binary-colour   (#xAA #xEE #xEE))
  (image-colour    (#xEE #xAA #xEE))
  (clicked-colour  (#xAA #xAA #xAA))
+
+ (address-bg-colour "white")
+ (address-error-colour "peachpuff")
 )
