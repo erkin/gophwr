@@ -7,7 +7,7 @@
 
 
 (define (display-version)
-  (for-each displayln version-message)
+  (displayln version-message)
   (exit))
 
 (module+ main

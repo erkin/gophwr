@@ -27,7 +27,7 @@
 (define (about)
   (message-box
    (string-append "About " project-name)
-   (string-join version-message "\n") frame
+   version-message frame
    '(ok no-icon)))
 
 ;;; Main window

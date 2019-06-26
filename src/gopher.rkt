@@ -18,10 +18,14 @@
   (let-values (((in out)
                 ;; TODO: Add an option to retry with clear connection if
                 ;; TLS handshake fails.
-                ((if (tls-enabled?)
-                     ssl-connect/enable-break
-                     tcp-connect/enable-break)
-                 host port)))
+                (cond
+                  ;; https://github.com/erkin/gophwr/wiki/TLS#100k-convention
+                  ((and ssl-available? (> port 100000))
+                   (ssl-connect/enable-break host (- port 100000)))
+                  ((tls-enabled?)
+                   (ssl-connect/enable-break host port))
+                  (else
+                   (tcp-connect/enable-break host port)))))
     ;; Request the desired file.
     (write-line path out)
     ;; Output port mustn't be closed before the input is completely

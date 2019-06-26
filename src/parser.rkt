@@ -6,15 +6,20 @@
 (require "const.rkt")
 
 
-;; We're using a simple in-house parser because the official one is too
-;; complicated for our simple but specific needs.
-;; We won't be dealing with URL schemes or parameters, but we'll have to
-;; deal with URIs that contain ';' and '	' as ordinary characters.
+#|
+We're using a simple in-house URL parser because the official one is too
+complicated for our simple but specific needs.
+We won't be dealing with URL schemes or parameters, but we'll have to
+deal with URIs that contain ';' and '	' as ordinary characters.
 
-;; (regexp-match magic-regexp "foo.bar:69/0/baz/quux")
-;;   '("foo.bar:69/0/baz/quux" "foo.bar" ":69" "/0/baz/quux" "0" "/baz/quux")
+For instance:
+(regexp-match magic-regexp "foo.bar:69/0/baz/quux")
+  '("foo.bar:69/0/baz/quux" "foo.bar" ":69" "/0/baz/quux" "0" "/baz/quux")
+
+(Note that domain field doesn't work with IPv6 right now.)
+|#
+
 (define magic-regexp
-  ;; Domain probably doesn't work with IPv6 right now.
   ;; Port and path are optional.
   ;; File type is mandatory if there's a path.
   (regexp
