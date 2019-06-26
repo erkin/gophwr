@@ -7,14 +7,16 @@
 (require "const.rkt")
 
 
-(define config-file (build-path (find-system-path 'pref-dir) (string-append project-name ".rktd")))
+(define config-file (build-path (find-system-path 'pref-dir)
+                                (string-append project-name ".rktd")))
 
 (define tls-enabled? (make-parameter #f))
 
 ;;; Preferences
 (define-syntax-rule (define-preference symbol default)
   (define symbol
-    (get-preference (quote symbol) (λ () default) 'timestamp config-file)))
+    (get-preference (quote symbol) (λ () default)
+                    'timestamp config-file)))
 
 (define-preference homepage "suika.erkin.party:70/1/gophwr")
 (define-preference download-folder #f)
@@ -32,7 +34,8 @@
 ;;; Colours
 (define-syntax-rule (define-colour colour rgb)
   (define colour
-    (apply make-color (get-preference (quote colour) (λ () rgb) 'timestamp config-file))))
+    (apply make-color (get-preference (quote colour) (λ () rgb)
+                                      'timestamp config-file))))
 
 (define-colour fg-colour '(#xEE #xEE #xEE))
 (define-colour bg-colour '(#x11 #x11 #x11))

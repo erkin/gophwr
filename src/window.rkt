@@ -120,7 +120,8 @@
          (tls-toggle
           (new checkable-menu-item% (parent tools-menu)
                (label "Enable TL&S")
-               (help-string "Exclusively use TLS when connecting to gopherholes")
+               (help-string
+                "Exclusively use TLS when connecting to gopherholes")
                (checked (tls-enabled?))
                (callback (λ (item event)
                            (tls-enabled? (send item is-checked?)))))))
@@ -218,9 +219,11 @@
        (label "")
        (init-value address)
        (style '(single))
-       ;; Call navigate-addressbar iff the callback event is pressing return key.
+       ;; Call navigate-addressbar iff the callback event is pressing
+       ;; return key.
        (callback (λ (f event)
-                   (when (equal? (send event get-event-type) 'text-field-enter)
+                   (when (equal? (send event get-event-type)
+                                 'text-field-enter)
                      (go-to (send f get-value)))))))
 
 (define address-button
@@ -275,7 +278,9 @@
 ;; Note that this saves the formatted version of menus.
 (define (save-page page)
   (when-let (filename (put-file "Choose a download location"
-                                frame download-folder (last (string-split address "/"))))
+                                frame
+                                download-folder
+                                (last (string-split address "/"))))
             (save-file filename
                        (send page get-text)
                        #:mode 'text)))
@@ -362,7 +367,8 @@
           ;; Strip out URL scheme from the address.
           (parse-urn (string-trim
                       (if (and (> (string-length uri) 8)
-                               (string=? (substring uri 0 9) "gopher://"))
+                               (string=? (substring uri 0 9)
+                                         "gopher://"))
                           (substring uri 9)
                           uri) #:repeat? #t))))
       ;; Do nothing if the address is blank.
@@ -388,7 +394,8 @@
           (("2" "8" "T")
            (error-page "Session types not supported."))
           (else
-           (error-page "Entity type not recognised: " (make-string type))))))))
+           (error-page "Entity type not recognised: "
+                       (make-string type))))))))
 
 (define (update-address urn)
   (unless (string=? address urn)
@@ -413,10 +420,10 @@
    urn
    (λ ()
      ((if (member type '("1" "7"))
-         render-menu
-         render-text)
-     page-text (fetch-file domain port path #:type 'text)
-     go-to))))
+          render-menu
+          render-text)
+      page-text (fetch-file domain port path #:type 'text)
+      go-to))))
 
 (define (to-binary urn domain port type path)
   (loading urn)
@@ -424,7 +431,9 @@
    urn
    (λ ()
      (when-let (filename (put-file "Choose a download location"
-                                   frame download-folder (last (string-split path "/"))))
+                                   frame
+                                   download-folder
+                                   (last (string-split path "/"))))
                (save-file filename
                           (fetch-file domain port path #:type 'binary)
                           #:mode 'binary)))))

@@ -69,7 +69,8 @@ For instance:
 (define/contract (parse-selector line)
   (-> string? (non-empty-listof string?))
   (if-let (parsed-selector (regexp-match selector-regexp line))
-          (match-let (((list _ type text path address port plus) parsed-selector))
+          (match-let (((list _ type text path address port plus)
+                       parsed-selector))
             (list type
                   text
                   ;; A couple defaults, just in case.
