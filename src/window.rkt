@@ -20,6 +20,123 @@
 (define next-address '())
 
 
+;;;; Main window
+;;; We're overriding frame% to be able to implement window-wide
+;;; keybindings.
+(define frame
+  (new
+   (class frame% (super-new)
+     (define (handle-keycombo key)
+       (let ((ctrl? (send key get-control-down))
+             (meta? (send key get-meta-down))
+             (key-code (send key get-key-code)))
+         (cond
+           ((eq? key-code 'f5)
+            (refresh))
+           ((and meta? (eq? key-code 'left))
+            (go-back))
+           ((and meta? (eq? key-code 'right))
+            (go-forward))
+           ((and meta? (eq? key-code 'home))
+            (go-home))
+           ((and ctrl? (eq? key-code #\l))
+            (send address-field focus)
+            (send (send address-field get-editor) select-all))
+           ((and ctrl? (eq? key-code #\f))
+            (find-in-page page-text))
+           ;; Return #f if we don't recognise this key code so that it can be
+           ;; delegated to lower levels in on-subwindow-char (such as the
+           ;; canvas or the text).
+           (else
+            #f))))
+     (define/override (on-subwindow-char receiver event)
+       (or (handle-keycombo event)
+           (send this on-menu-char event)
+           (send this on-system-menu-char event)
+           (send this on-traverse-char event))))
+   (label project-name)
+   (width initial-width)
+   (height initial-height)))
+
+
+;;;; Address box
+(define address-pane
+  (new horizontal-pane% (parent frame)
+       (alignment '(left top))
+       (stretchable-width #t)
+       (stretchable-height #f)
+       (horiz-margin 10)))
+
+(define back-key
+  (new button% (parent address-pane)
+       (label "\u2190") ; Back arrow
+       (enabled #f)
+       (horiz-margin 0)
+       (callback (λ _ (go-back)))))
+(define forward-key
+  (new button% (parent address-pane)
+       (label "\u2192") ; Forward arrow
+       (enabled #f)
+       (horiz-margin 0)
+       (callback (λ _ (go-forward)))))
+
+(define refresh-key
+  (new button% (parent address-pane)
+       (label "\u21bb") ; Clockwise arrow
+       (horiz-margin 0)
+       (callback (λ _ (refresh)))))
+(define home-key
+  (new button% (parent address-pane)
+       (label "\u2302") ; House sign
+       (horiz-margin 0)
+       (callback (λ _ (go-home)))))
+
+(define address-field
+  (new text-field% (parent address-pane)
+       (label "")
+       (init-value address)
+       (style '(single))
+       ;; Call navigate-addressbar iff the callback event is pressing
+       ;; return key.
+       (callback (λ (f event)
+                   (when (equal? (send event get-event-type)
+                                 'text-field-enter)
+                     (go-to (send f get-value)))))))
+
+(define address-button
+  (new button% (parent address-pane)
+       (label "\u2388") ; Helm sign
+       (vert-margin 1)
+       (horiz-margin 0)
+       (callback (λ _ (go)))))
+
+
+;;;; Page view
+(define page-canvas
+  (new editor-canvas% (parent frame)
+       (style '(no-focus auto-hscroll auto-vscroll))
+       (wheel-step wheel-step)
+       (stretchable-width #t)
+       (stretchable-height #t)))
+
+;;; Overriding text% to implement a right-click menu.
+(define page-text
+  (new
+   (class text% (super-new)
+     (define/override (on-default-event event)
+       (cond
+         ((send event button-down? 'right)
+          (let ((x (send event get-x)) (y (send event get-y)))
+            (send (send this get-admin) popup-menu right-click-menu x y)))
+         (else (super on-default-event event))))
+     (define/augment (after-set-position)
+       (send copy-menu-item enable
+             (not (zero? (- (send this get-end-position)
+                            (send this get-start-position)))))))
+   (auto-wrap auto-wrap?)))
+
+
+;;;; General procedures
 (define (quit)
   (custodian-shutdown-all (current-custodian))
   (queue-callback exit #t))
@@ -30,45 +147,8 @@
    version-message frame
    '(ok no-icon)))
 
-;;; Main window
-;; We're overriding frame% to be able to implement window-wide
-;; keybindings.
-(define frame
-  (new
-   (class frame% (super-new)
-     (define/override (on-subwindow-char receiver event)
-       (or (handle-keycombo event)
-           (send this on-menu-char event)
-           (send this on-system-menu-char event)
-           (send this on-traverse-char event))))
-   (label project-name)
-   (width initial-width)
-   (height initial-height)))
-
-(define/contract (handle-keycombo key)
-  (-> (is-a?/c key-event%) (or/c void? false/c))
-  (let ((ctrl? (send key get-control-down))
-        (meta? (send key get-meta-down))
-        (key-code (send key get-key-code)))
-    (cond
-      ((eq? key-code 'f5)
-       (refresh))
-      ((and meta? (eq? key-code 'left))
-       (go-back))
-      ((and meta? (eq? key-code 'right))
-       (go-forward))
-      ((and meta? (eq? key-code 'home))
-       (go-home))
-      ((and ctrl? (eq? key-code #\l))
-       (send address-field focus)
-       (send (send address-field get-editor) select-all))
-      ((and ctrl? (eq? key-code #\f))
-       (find-in-page page-text))
-      ;; Return #f if we don't recognise this key code so that it can be
-      ;; delegated to lower levels in on-subwindow-char (such as the
-      ;; canvas or the text).
-      (else
-       #f))))
+(define (clear-page page)
+  (send page erase))
 
 (define (clear-selection page)
   (send page set-position 0 'same #f #f 'local))
@@ -105,8 +185,9 @@
                                " not found in current page.")
                 frame '(ok caution)))))))))
 
+
+;;;; Menubar
 (define (populate-menu-bar)
-  ;;;; Menubar
   (let* ((menu-bar (new menu-bar% (parent frame)))
          (file-menu (new menu% (parent menu-bar) (label "&File")))
          (tools-menu (new menu% (parent menu-bar) (label "&Tools")))
@@ -142,8 +223,8 @@
     ;; Tools menu
     (new separator-menu-item% (parent tools-menu))
     (new menu-item% (parent tools-menu)
-         (label "&Find")
-         (help-string "Find string in page")
+         (label "&Find in page")
+         (help-string "Find a string in this page")
          (callback (λ _
                      (find-in-page page-text))))
 
@@ -153,6 +234,7 @@
          (help-string "Show version and licence info")
          (callback (λ _
                      (about))))
+
     (when (debug-mode?)
       (let ((debug-menu (new menu% (parent menu-bar) (label "&Debug"))))
         (new menu-item% (parent debug-menu)
@@ -173,106 +255,36 @@
                          (unless (send page-text in-edit-sequence?)
                            (send page-text load-file "" 'standard)))))))))
 
+
+;;;; Right-click menu
 (define right-click-menu (new popup-menu%))
 
-(define (populate-right-click-menu-bar menu)
-  (new menu-item% (parent menu)
+(define copy-menu-item
+  (new menu-item% (parent right-click-menu)
        (label "&Copy")
        (help-string "Copy selected text")
        (shortcut #\c)
        (callback
         (λ _
-          (send page-text copy))))
-  (new separator-menu-item% (parent menu))
-  (new menu-item% (parent menu)
+          (send page-text copy)))))
+
+(define (populate-right-click-menu)
+  (send copy-menu-item enable #f)
+  (new separator-menu-item% (parent right-click-menu))
+  (new menu-item% (parent right-click-menu)
        (label "&Save page")
        (help-string "Save page to device")
        (shortcut #\s)
        (callback
         (λ _
           (save-page page-text))))
-  (new menu-item% (parent menu)
+  (new menu-item% (parent right-click-menu)
        (label "Select &all")
        (help-string "Select all text in the page")
        (shortcut #\a)
        (callback
         (λ _
           (send page-text select-all)))))
-
-
-;;;; Address box
-(define address-pane
-  (new horizontal-pane% (parent frame)
-       (alignment '(left top))
-       (stretchable-width #t)
-       (stretchable-height #f)
-       (horiz-margin 10)))
-
-
-;;;; Keys
-(define back-key
-  (new button% (parent address-pane)
-       (label "\u2190") ; Back arrow
-       (enabled #f)
-       (horiz-margin 0)
-       (callback (λ _ (go-back)))))
-(define forward-key
-  (new button% (parent address-pane)
-       (label "\u2192") ; Forward arrow
-       (enabled #f)
-       (horiz-margin 0)
-       (callback (λ _ (go-forward)))))
-
-(define refresh-key
-  (new button% (parent address-pane)
-       (label "\u21bb") ; Clockwise arrow
-       (horiz-margin 0)
-       (callback (λ _ (refresh)))))
-
-(define home-key
-  (new button% (parent address-pane)
-       (label "\u2302") ; House sign
-       (horiz-margin 0)
-       (callback (λ _ (go-home)))))
-
-(define address-field
-  (new text-field% (parent address-pane)
-       (label "")
-       (init-value address)
-       (style '(single))
-       ;; Call navigate-addressbar iff the callback event is pressing
-       ;; return key.
-       (callback (λ (f event)
-                   (when (equal? (send event get-event-type)
-                                 'text-field-enter)
-                     (go-to (send f get-value)))))))
-
-(define address-button
-  (new button% (parent address-pane)
-       (label "\u2388") ; Helm sign
-       (vert-margin 1)
-       (horiz-margin 0)
-       (callback (λ _ (go)))))
-
-;;;; Page view
-(define page-canvas
-  (new editor-canvas% (parent frame)
-       (style '(no-focus auto-hscroll auto-vscroll))
-       (wheel-step wheel-step)
-       (stretchable-width #t)
-       (stretchable-height #t)))
-
-;; Overriding text% to implement a right-click menu.
-(define page-text
-  (new
-   (class text% (super-new)
-     (define/override (on-default-event event)
-       (cond
-         ((send event button-down? 'right)
-          (let ((x (send event get-x)) (y (send event get-y)))
-            (send (send this get-admin) popup-menu right-click-menu x y)))
-         (else (super on-default-event event)))))
-   (auto-wrap auto-wrap?)))
 
 
 ;;; GUI starts here.
@@ -297,28 +309,16 @@
     (lazy-refresh #t))
 
   (initialise-styles)
+  (populate-right-click-menu)
   (populate-menu-bar)
-  (populate-right-click-menu-bar right-click-menu)
 
   ;; Here we go!
   (send frame create-status-line)
   (send frame show #t))
 
-;;; Save current page
-;; Note that this saves the formatted version of menus.
-(define (save-page page)
-  (when-let (filename (put-file "Choose a download location"
-                                frame
-                                download-folder
-                                (last (string-split address "/"))))
-            (write-file filename
-                        (send page get-text)
-                        #:mode 'text)))
 
-;;; Frame and page details
-(define (clear-page page)
-  (send page erase))
-
+;;;; Auxiliary procedures
+;;; Make it abundantly clear that we're busy loading the page.
 (define (loading urn)
   (send* frame
     (set-status-text
@@ -331,6 +331,7 @@
   (send page-canvas enable #f)
   (begin-busy-cursor))
 
+;;; Reset window state. Everything is fine now.
 (define (loaded)
   (send* frame
     (set-status-text "")
@@ -343,22 +344,33 @@
   (send page-canvas enable #t)
   (end-busy-cursor))
 
+;; Run stuff in a thread, sandwiched between preparation and
+;; cleanup procedures. Return void.
+(define (load-stuff urn stuff)
+  (loading urn)
+  (void (thread (λ () (stuff) (loaded)))))
+
 (define (error-page . strs)
   (clear-page page-text)
   (loaded)
-  (send frame set-status-text "Error!")
+  (send frame set-status-text "\u26a0 Error!") ; warning sign
   (send* page-text
     (change-style d-error)
     (insert (string-append* project-name " error: " strs))))
 
-(define/contract (make-image-snip image-bytes type)
-  (-> bytes? symbol? (is-a?/c image-snip%))
-  (make-object image-snip%
-               (make-object bitmap%
-                            (open-input-bytes image-bytes)
-                            type bg-colour #t)))
+(define (save-page page)
+  ;;; Note that this saves the formatted version of menus.
+  (when-let (filename
+             (put-file "Choose a download location"
+                       frame
+                       download-folder
+                       (last (string-split address "/"))))
+            (write-file filename
+                        (send page get-text)
+                        #:mode 'text)))
 
-;;; Navigation
+
+;;;; Navigation procedures
 (define (refresh)
   ;; Keep history stacks intact when refreshing.
   (go-to address #:history #t))
@@ -439,16 +451,10 @@
               (not (string=? address (car previous-address))))
       (set! previous-address (cons address previous-address)))))
 
-;; Run stuff in a thread, sandwiched between preparation and
-;; cleanup procedures. Return void.
-(define (load-file urn stuff)
-  (loading urn)
-  (void (thread (λ () (stuff) (loaded)))))
-
 (define (to-text urn domain port type path)
   (clear-page page-text)
   (update-address urn)
-  (load-file
+  (load-stuff
    urn
    (λ ()
      ((if (member type '("1" "7"))
@@ -460,7 +466,7 @@
 
 (define (to-binary urn domain port type path)
   (loading urn)
-  (load-file
+  (load-stuff
    urn
    (λ ()
      (when-let (filename (put-file "Choose a download location"
@@ -472,9 +478,14 @@
                            #:mode 'binary)))))
 
 (define (to-image urn domain port type path)
+  (define (make-image-snip image-bytes type)
+    (make-object image-snip%
+                 (make-object bitmap%
+                              (open-input-bytes image-bytes)
+                              type bg-colour #t)))
   (clear-page page-text)
   (update-address urn)
-  (load-file
+  (load-stuff
    urn
    (λ ()
      (send page-text insert
