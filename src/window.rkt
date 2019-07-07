@@ -177,6 +177,14 @@
 
 (define (populate-right-click-menu-bar menu)
   (new menu-item% (parent menu)
+       (label "&Copy")
+       (help-string "Copy selected text")
+       (shortcut #\c)
+       (callback
+        (λ _
+          (send page-text copy))))
+  (new separator-menu-item% (parent menu))
+  (new menu-item% (parent menu)
        (label "&Save page")
        (help-string "Save page to device")
        (shortcut #\s)
@@ -184,8 +192,8 @@
         (λ _
           (save-page page-text))))
   (new menu-item% (parent menu)
-       (label "Select &All")
-       (help-string "Select all text in page")
+       (label "Select &all")
+       (help-string "Select all text in the page")
        (shortcut #\a)
        (callback
         (λ _
@@ -254,9 +262,17 @@
        (stretchable-width #t)
        (stretchable-height #t)))
 
+;; Overriding text% to implement a right-click menu.
 (define page-text
-  (new text%
-       (auto-wrap auto-wrap?)))
+  (new
+   (class text% (super-new)
+     (define/override (on-default-event event)
+       (cond
+         ((send event button-down? 'right)
+          (let ((x (send event get-x)) (y (send event get-y)))
+            (send (send this get-admin) popup-menu right-click-menu x y)))
+         (else (super on-default-event event)))))
+   (auto-wrap auto-wrap?)))
 
 
 ;;; GUI starts here.
