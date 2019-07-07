@@ -18,6 +18,9 @@
      (("--ssl" "--tls")
       "Enable TLS mode"
       (tls-enabled? #t))
+     (("--debug")
+      "Enable debug mode"
+      (debug-mode? #t))
      (("--version" "-v")
       "Show version and licence information"
       (display-version))

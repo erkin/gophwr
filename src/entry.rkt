@@ -1,6 +1,6 @@
 #lang racket/base
 (provide render-menu render-text
-         save-file initialise-styles
+         write-file initialise-styles
          d-usual d-error)
 
 (require racket/gui/base racket/class racket/match)
@@ -65,7 +65,7 @@
               (send* page (insert line) (insert "\n")))
             content))
 
-(define (save-file file-path content #:mode (mode 'binary))
+(define (write-file file-path content #:mode (mode 'binary))
   (when file-path
     (let ((output-file (open-output-file
                         file-path #:mode mode #:exists 'replace)))

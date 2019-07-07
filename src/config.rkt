@@ -6,6 +6,7 @@
 (require racket/draw racket/file racket/class)
 (require "const.rkt")
 
+(define debug-mode? (make-parameter #f))
 
 (define config-file (build-path (find-system-path 'pref-dir)
                                 (string-append project-name ".rktd")))

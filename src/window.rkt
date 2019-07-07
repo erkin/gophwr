@@ -64,12 +64,6 @@
        (send (send address-field get-editor) select-all))
       ((and ctrl? (eq? key-code #\f))
        (find-in-page page-text))
-      ;; Undocumented secret keybinding to trigger garbage collection.
-      ;; This won't ever be necessary, but it's useful for tracking
-      ;; memory usage.
-      ((and ctrl? meta? (eq? key-code #\g))
-       (unless (send page-text in-edit-sequence?)
-         (collect-garbage)))
       ;; Return #f if we don't recognise this key code so that it can be
       ;; delegated to lower levels in on-subwindow-char (such as the
       ;; canvas or the text).
@@ -158,7 +152,26 @@
          (label "&About")
          (help-string "Show version and licence info")
          (callback (λ _
-                     (about))))))
+                     (about))))
+    (when (debug-mode?)
+      (let ((debug-menu (new menu% (parent menu-bar) (label "&Debug"))))
+        (new menu-item% (parent debug-menu)
+             (label "Collect &garbage")
+             (shortcut #\g)
+             (callback (λ _
+                         (unless (send page-text in-edit-sequence?)
+                           (collect-garbage)))))
+        (new separator-menu-item% (parent debug-menu))
+        (new menu-item% (parent debug-menu)
+             (label "&Dump WXME")
+             (callback (λ _
+                         (unless (send page-text in-edit-sequence?)
+                           (send page-text save-file "" 'standard)))))
+        (new menu-item% (parent debug-menu)
+             (label "&Load WXME")
+             (callback (λ _
+                         (unless (send page-text in-edit-sequence?)
+                           (send page-text load-file "" 'standard)))))))))
 
 (define right-click-menu (new popup-menu%))
 
@@ -282,9 +295,9 @@
                                 frame
                                 download-folder
                                 (last (string-split address "/"))))
-            (save-file filename
-                       (send page get-text)
-                       #:mode 'text)))
+            (write-file filename
+                        (send page get-text)
+                        #:mode 'text)))
 
 ;;; Frame and page details
 (define (clear-page page)
@@ -438,9 +451,9 @@
                                    frame
                                    download-folder
                                    (last (string-split path "/"))))
-               (save-file filename
-                          (fetch-file domain port path #:type 'binary)
-                          #:mode 'binary)))))
+               (write-file filename
+                           (fetch-file domain port path #:type 'binary)
+                           #:mode 'binary)))))
 
 (define (to-image urn domain port type path)
   (clear-page page-text)
