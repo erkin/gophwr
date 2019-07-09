@@ -1,10 +1,11 @@
 #lang racket/base
-
 (provide initialise-window go-to clear-page page-text)
 
-(require racket/contract/base racket/contract/region
-         racket/gui/base racket/list racket/match
-         racket/class racket/string)
+(require racket/class
+         racket/gui/base
+         racket/list
+         racket/match
+         racket/string)
 (require openssl)
 (require "config.rkt"
          "const.rkt"
@@ -112,13 +113,6 @@
 
 
 ;;;; Page view
-(define page-canvas
-  (new editor-canvas% (parent frame)
-       (style '(no-focus auto-hscroll auto-vscroll))
-       (wheel-step wheel-step)
-       (stretchable-width #t)
-       (stretchable-height #t)))
-
 ;;; Overriding text% to implement a right-click menu.
 (define page-text
   (new
@@ -135,6 +129,13 @@
                             (send this get-start-position)))))))
    (auto-wrap auto-wrap?)))
 
+(define page-canvas
+  (new editor-canvas% (parent frame)
+       (style '(no-focus auto-hscroll auto-vscroll))
+       (editor page-text)
+       (wheel-step wheel-step)
+       (stretchable-width #t)
+       (stretchable-height #t)))
 
 ;;;; General procedures
 (define (quit)
@@ -304,11 +305,10 @@
   (send page-text set-max-undo-history 0)
   (send* page-canvas
     (set-canvas-background bg-colour)
-    (set-editor page-text)
     (force-display-focus #t)
     (lazy-refresh #t))
 
-  (initialise-styles)
+  (initialise-styles (send page-text get-style-list))
   (populate-right-click-menu)
   (populate-menu-bar)
 
@@ -354,9 +354,8 @@
   (clear-page page-text)
   (loaded)
   (send frame set-status-text "\u26a0 Error!") ; warning sign
-  (send* page-text
-    (change-style d-error)
-    (insert (string-append* project-name " error: " strs))))
+  (change-style page-text "Error")
+  (send page-text insert (string-append* project-name " error: " strs)))
 
 (define (save-page page)
   ;;; Note that this saves the formatted version of menus.

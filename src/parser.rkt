@@ -1,8 +1,10 @@
 #lang racket/base
 (provide parse-urn parse-selector)
 
-(require racket/contract/base racket/contract/region
-         racket/string racket/match)
+(require racket/contract/base
+         racket/contract/region
+         racket/match
+         racket/string)
 (require "const.rkt")
 
 

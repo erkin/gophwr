@@ -1,8 +1,10 @@
 #lang racket/base
-(provide fetch-file)
+(provide fetch-file write-file)
 
-(require racket/contract/base racket/contract/region
-         racket/port racket/tcp)
+(require racket/contract/base
+         racket/contract/region
+         racket/port
+         racket/tcp)
 (require openssl)
 (require "config.rkt")
 
@@ -48,3 +50,12 @@
                         (close-output-port out)
                         result)
                       (raise-user-error "Server returned no bytes.")))))))
+
+(define (write-file file-path content #:mode (mode 'binary))
+  (when file-path
+    (let ((output-file (open-output-file
+                        file-path #:mode mode #:exists 'replace)))
+      (if (eq? mode 'binary)
+          (write-bytes-avail/enable-break content output-file)
+          (write-string content output-file))
+      (close-output-port output-file))))

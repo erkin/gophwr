@@ -3,8 +3,11 @@
                      define-preference
                      define-colour))
 
-(require racket/draw racket/file racket/class)
+(require racket/class
+         racket/draw
+         racket/file)
 (require "const.rkt")
+
 
 (define debug-mode? (make-parameter #f))
 
