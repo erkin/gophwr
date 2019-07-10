@@ -3,7 +3,7 @@
 
 
 (define project-name "gophwr")
-(define project-version "v0.5.5")
+(define project-version "v0.5.6")
 
 (define version-message
   (format #<<version
