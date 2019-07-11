@@ -118,16 +118,21 @@
 (define page-text
   (new
    (class text% (super-new)
+     (inherit get-admin get-start-position get-end-position hide-caret)
      (define/override (on-default-event event)
        (cond
          ((send event button-down? 'right)
           (let ((x (send event get-x)) (y (send event get-y)))
-            (send (send this get-admin) popup-menu right-click-menu x y)))
+            (send (get-admin) popup-menu right-click-menu x y)))
          (else (super on-default-event event))))
      (define/augment (after-set-position)
-       (send copy-menu-item enable
-             (not (zero? (- (send this get-end-position)
-                            (send this get-start-position)))))))
+       ;; Check if any text is selected.
+       (let ((no-selection? (= (get-start-position)
+                               (get-end-position))))
+         ;; No? Then hide the caret.
+         (hide-caret no-selection?)
+         ;; Yes? Enable the copy button in right-click menu.
+         (send copy-menu-item enable (not no-selection?)))))
    (auto-wrap auto-wrap?)))
 
 (define page-canvas
@@ -306,6 +311,7 @@
   (send page-text set-max-undo-history 0)
   (send* page-canvas
     (set-canvas-background bg-colour)
+    (force-display-focus #t)
     (lazy-refresh #t))
 
   (initialise-styles (send page-text get-style-list))
