@@ -33,22 +33,20 @@
                    (tcp-connect/enable-break host port)))))
     ;; Request the desired file.
     (write-line path out)
-    ;; Output port mustn't be closed before the input is completely
-    ;; read. port->bytes and port->lines automatically close their
+    ;; Output port mustn't be closed before the input is completely read.
+    ;; tcp-abandon-port doesn't send a close message until the input port
+    ;; is closed as well.
+    (tcp-abandon-port out)
+    ;; port->bytes and port->lines automatically close their
     ;; respective input ports.
-    (flush-output out)
     (case type
       ((text) (let ((result (port->lines in)))
                 (if (pair? result)
-                    (begin
-                      (close-output-port out)
-                      result)
+                    result
                     (raise-user-error "Server returned no lines."))))
       ((binary) (let ((result (port->bytes in)))
                   (if (bytes? result)
-                      (begin
-                        (close-output-port out)
-                        result)
+                      result
                       (raise-user-error "Server returned no bytes.")))))))
 
 (define (write-file file-path content #:mode (mode 'binary))
