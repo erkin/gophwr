@@ -5,6 +5,8 @@
 (define project-name "gophwr")
 (define project-version "v0.5.6")
 
+(define project-home "suika.erkin.party:70/1/gophwr")
+
 (define version-message
   (format #<<version
 ~a ~a

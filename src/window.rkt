@@ -213,7 +213,7 @@
 
     ;; File menu
     (new menu-item% (parent file-menu)
-         (label "&Save page")
+         (label "&Save Page")
          (help-string "Save page to device")
          (shortcut #\s)
          (callback
@@ -228,16 +228,21 @@
                      (quit))))
 
     ;; Tools menu
-    (new separator-menu-item% (parent tools-menu))
     (new menu-item% (parent tools-menu)
-         (label "&Find in page")
+         (label "&Find in Page")
          (help-string "Find a string in this page")
          (callback (λ _
                      (find-in-page page-text))))
 
     ;; Help menu
     (new menu-item% (parent help-menu)
-         (label "&About")
+         (label "gophwr Home")
+         (help-string "Go to gophwr gopherhole (gophwrhole?)")
+         (callback (λ _
+                     (go-to project-home))))
+    (new separator-menu-item% (parent help-menu))
+    (new menu-item% (parent help-menu)
+         (label "&About gophwr")
          (help-string "Show version and licence info")
          (callback (λ _
                      (about))))
@@ -245,7 +250,7 @@
     (when (debug-mode?)
       (let ((debug-menu (new menu% (parent menu-bar) (label "&Debug"))))
         (new menu-item% (parent debug-menu)
-             (label "Collect &garbage")
+             (label "Collect &Garbage")
              (shortcut #\g)
              (callback (λ _
                          (unless (send page-text in-edit-sequence?)
@@ -277,21 +282,21 @@
 
 (define (populate-right-click-menu)
   (send copy-menu-item enable #f)
-  (new separator-menu-item% (parent right-click-menu))
   (new menu-item% (parent right-click-menu)
-       (label "&Save page")
-       (help-string "Save page to device")
-       (shortcut #\s)
-       (callback
-        (λ _
-          (save-page page-text))))
-  (new menu-item% (parent right-click-menu)
-       (label "Select &all")
+       (label "Select &All")
        (help-string "Select all text in the page")
        (shortcut #\a)
        (callback
         (λ _
-          (send page-text select-all)))))
+          (send page-text select-all))))
+  (new separator-menu-item% (parent right-click-menu))
+  (new menu-item% (parent right-click-menu)
+       (label "&Save Page")
+       (help-string "Save page to device")
+       (shortcut #\s)
+       (callback
+        (λ _
+          (save-page page-text)))))
 
 
 ;;; GUI starts here.

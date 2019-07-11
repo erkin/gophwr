@@ -22,7 +22,7 @@
     (get-preference (quote symbol) (λ () default)
                     'timestamp config-file)))
 
-(define-preference homepage "suika.erkin.party:70/1/gophwr")
+(define-preference homepage project-home)
 (define-preference download-folder #f)
 
 (define-preference wheel-step 3)
