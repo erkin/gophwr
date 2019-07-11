@@ -25,14 +25,15 @@
 *** Work in progress
     + Adjustable TLS support
     + Find in page
+    + Configurable keyboard shortcuts
     + Mouseover/right-click links
 
 *** Up next
     + Options menu
     + Bookmarks
     + Duplicate (=+=) types
-    + Keyboard shortcuts
     + Zooming
+    + Caching
     + Tabbed navigation
 
 ** Usage
@@ -53,7 +54,7 @@
 *** Installation
     You can install it directly to your local Racket setup:
 
-    ~% raco pkg install --user https://github.com/erkin/gophwr.git~
+    ~% raco pkg install --user git://github.com/erkin/gophwr.git~
 
     Alternatively, if you're using the Nix package manager, simply run
     ~% nix-build~
