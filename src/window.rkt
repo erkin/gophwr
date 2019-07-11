@@ -107,6 +107,7 @@
 (define address-button
   (new button% (parent address-pane)
        (label "\u2388") ; Helm sign
+       (style '(border))
        (vert-margin 1)
        (horiz-margin 0)
        (callback (λ _ (go)))))
@@ -305,7 +306,6 @@
   (send page-text set-max-undo-history 0)
   (send* page-canvas
     (set-canvas-background bg-colour)
-    (force-display-focus #t)
     (lazy-refresh #t))
 
   (initialise-styles (send page-text get-style-list))

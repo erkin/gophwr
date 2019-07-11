@@ -8,30 +8,28 @@
          "window.rkt")
 
 
-(define (display-version)
-  (displayln version-message)
-  (exit))
+(define addresses
+  (command-line
+   #:program project-name
+   #:once-each
+   (("--ssl" "--tls")
+    "Start with TLS mode enabled"
+    (tls-enabled? #t))
+   (("--debug")
+    "Enable debug menu"
+    (debug-mode? #t))
+   (("--version" "-v")
+    "Show version and licence information"
+    (displayln version-message)
+    (exit))
+
+   ;; List of arguments to navigate to at startup.
+   ;; The reason we do it with a list is to be able to handle multiple
+   ;; addresses as separate tabs in the future.
+   #:args addresses
+   addresses))
 
 (module+ main
-  (define addresses
-    (command-line
-     #:program project-name
-     #:once-each
-     (("--ssl" "--tls")
-      "Enable TLS mode"
-      (tls-enabled? #t))
-     (("--debug")
-      "Enable debug mode"
-      (debug-mode? #t))
-     (("--version" "-v")
-      "Show version and licence information"
-      (display-version))
-
-     ;; List of arguments to navigate to at startup.
-     ;; The reason we do it with a list is to be able to handle multiple
-     ;; addresses as separate tabs in the future.
-     #:args addresses
-     addresses))
   (when (tls-enabled?)
     (unless ssl-available?
       (raise-user-error "TLS not available:"
