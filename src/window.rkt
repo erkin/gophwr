@@ -21,6 +21,8 @@
 (define previous-address '())
 (define next-address '())
 
+;;; Tree of bookmarks
+(define bookmarks user-bookmarks)
 
 ;;;; Main window
 ;;; We're overriding frame% to be able to implement window-wide
@@ -192,72 +194,159 @@
                                " not found in current page.")
                 frame '(ok caution)))))))))
 
+;; Traverse through the bookmark list (see config.rkt)
+;; and generate menu items out of them.
+(define (populate-bookmarks menu items)
+  (unless (or (not (pair? items)) (null? items))
+    (let ((item (car items)))
+      (cond
+        ;; Item is not a list.
+        ;; Just a label. (Disabled menu item.)
+        ((not (list? item)) (send
+                             (new menu-item% (parent menu)
+                                  (label (~a item))
+                                  (callback void))
+                             enable #f))
+        ;; Item is an empty list.
+        ;; A separator.
+        ((null? item) (new separator-menu-item% (parent menu)))
+        ;; Item contains only one element.
+        ;; A link with no label. Link itself becomes the label.
+        ((null? (cdr item)) (new menu-item% (parent menu)
+                                 (label (~a (car item)))
+                                 (callback (λ _ (go-to (car item))))))
+        ;; Item contains a label and a list.
+        ;; A submenu to be parsed. (Same syntax.)
+        ((list? (cadr item)) (populate-bookmarks
+                              (new menu% (parent menu)
+                                   (label (~a (car item))))
+                              (cadr item)))
+        ;; Item contains a label and a link.
+        ;; A link with a label. (Duh!)
+        (else (new menu-item% (parent menu)
+                   (label (~a (car item)))
+                   (callback (λ _ (go-to (cadr item))))))))
+    (populate-bookmarks menu (cdr items))))
+
+(define (bookmark-dialog menu)
+  (define (add-bookmark label link type)
+    (let ((bookmark
+           ;; TODO: A smarter way to do this.
+           (case type
+             (("Separator") (if (non-empty-string? label)
+                                label
+                                (list)))
+             (("Bookmark") (if (non-empty-string? label)
+                               (list label link)
+                               (list link)))
+             (("Folder") (list label (list))))))
+      (populate-bookmarks menu (list bookmark))
+      (set! bookmarks (append bookmarks (list bookmark)))))
+
+  (define dialog
+    (new dialog% (parent frame)
+         (label "Bookmark Page")
+         (border 5)
+         (spacing 5)))
+
+  (define (no-blank-bookmark)
+    (send ok-button enable
+         (not (and (zero? (send choice get-selection))
+                   (zero? (string-length
+                           (send link-field get-value)))))))
+
+  (define pane
+    (new horizontal-pane% (parent dialog)))
+
+  (define choice
+    (new radio-box% (parent pane)
+        (label "")
+        (choices '("Bookmark"
+                   "Separator"
+                   "Folder"))
+        (callback
+         (λ _ (send link-field enable
+                    (zero? (send choice get-selection)))
+            (no-blank-bookmark)))))
+
+  (define field-panel
+    (new vertical-panel% (parent pane)
+         (alignment '(right center))
+         (border 2)
+         (spacing 3)))
+
+  (define label-field
+    (new text-field% (parent field-panel)
+         (label "Label ")))
+  (define link-field
+    (new text-field% (parent field-panel)
+         (label "Link ")
+         (init-value address)
+         (callback (λ (item event)
+                     (when (eq? (send event get-event-type) 'text-field)
+                       (no-blank-bookmark))))))
+
+  (define button-panel
+    (new horizontal-panel% (parent dialog)
+         (alignment '(center center))))
+  (new button% (parent button-panel)
+       (label "Cancel")
+       (callback (λ _ (send dialog show #f))))
+  (define ok-button
+    (new button% (parent button-panel)
+        (label "OK")
+        (callback (λ _
+                    (add-bookmark
+                     (send label-field get-value)
+                     (send link-field get-value)
+                     (send choice get-item-label
+                           (send choice get-selection)))
+                    (send dialog show #f)))))
+  (when (system-position-ok-before-cancel?)
+    (send button-panel change-children reverse))
+
+  (send dialog show #t))
 
 ;;;; Menubar
 (define (populate-menu-bar)
-  ;; Traverse through the bookmark list (see config.rkt)
-  ;; and generate menu items out of them.
-  (define (populate-bookmarks menu items)
-    (unless (or (not (pair? items)) (null? items))
-      (let ((item (car items)))
-        (cond
-          ;; Item is not a list.
-          ;; Just a label. (Disabled menu item.)
-          ((not (list? item)) (send
-                               (new menu-item% (parent menu)
-                                    (label (~a item))
-                                    (callback void))
-                               enable #f))
-          ;; Item is an empty list.
-          ;; A separator.
-          ((null? item) (new separator-menu-item% (parent menu)))
-          ;; Item contains only one element.
-          ;; A link with no label. Link itself becomes the label.
-          ((null? (cdr item)) (new menu-item% (parent menu)
-                                   (label (~a (car item)))
-                                   (callback (λ _ (go-to (car item))))))
-          ;; Item contains a label and a list.
-          ;; A submenu to be parsed. (Same syntax.)
-          ((list? (cadr item)) (populate-bookmarks
-                                (new menu% (parent menu)
-                                     (label (~a (car item))))
-                                (cadr item)))
-          ;; Item contains a label and a link.
-          ;; A link with a label. (Duh!)
-          (else (new menu-item% (parent menu)
-                     (label (~a (car item)))
-                     (callback (λ _ (go-to (cadr item))))))))
-      (populate-bookmarks menu (cdr items))))
-
   (define menu-bar (new menu-bar% (parent frame)))
 
-  (let ((file-menu (new menu% (parent menu-bar) (label "&File"))))
+  (let ((file-menu (new menu% (parent menu-bar)
+                        (label "&File"))))
     (new menu-item% (parent file-menu)
          (label "&Save Page")
          (help-string "Save page to device")
          (shortcut #\s)
-         (callback
-          (λ _
-            (save-page page-text))))
+         (callback (λ _ (save-page page-text))))
     (new separator-menu-item% (parent file-menu))
     (new menu-item% (parent file-menu)
          (label "&Quit")
          (help-string "Exit gophwr")
          (shortcut #\q)
-         (callback (λ _
-                     (quit)))))
+         (callback (λ _ (quit)))))
 
   (when bookmarks
-    (populate-bookmarks
-     (new menu% (parent menu-bar) (label "&Bookmarks"))
-     bookmarks))
+    (let ((bookmarks-menu (new menu% (parent menu-bar) (label "&Bookmarks"))))
+      (new menu-item% (parent bookmarks-menu)
+           (label "Add Bookmark")
+           (help-string "Add this page to your bookmarks")
+           (shortcut #\d)
+           (callback (λ _ (bookmark-dialog bookmarks-menu))))
+      (new menu-item% (parent bookmarks-menu)
+           (label "Save Bookmarks")
+           (help-string "Write your bookmarks to the config file")
+           (callback (λ _
+                       (save-preferences '(bookmarks) (list bookmarks))
+                       (message-box
+                        "Success!" "Bookmarks were saved to config." frame))))
+      (new separator-menu-item% (parent bookmarks-menu))
+      (populate-bookmarks bookmarks-menu bookmarks)))
 
   (let ((tools-menu (new menu% (parent menu-bar) (label "&Tools"))))
     (new menu-item% (parent tools-menu)
          (label "&Find in Page")
          (help-string "Find a string in this page")
-         (callback (λ _
-                     (find-in-page page-text))))
+         (callback (λ _ (find-in-page page-text))))
     ;; Grey out TLS toggle button if TLS is not available in the system.
     (send (new checkable-menu-item% (parent tools-menu)
                (label "Enable TL&S")
@@ -272,14 +361,12 @@
     (new menu-item% (parent help-menu)
          (label "gophwr Home")
          (help-string "Go to gophwr gopherhole (gophwrhole?)")
-         (callback (λ _
-                     (go-to project-home))))
+         (callback (λ _ (go-to project-home))))
     (new separator-menu-item% (parent help-menu))
     (new menu-item% (parent help-menu)
          (label "&About gophwr")
          (help-string "Show version and licence info")
-         (callback (λ _
-                     (about)))))
+         (callback (λ _ (about)))))
 
   (when (debug-mode?)
     (let ((debug-menu (new menu% (parent menu-bar) (label "&Debug"))))
@@ -311,8 +398,7 @@
        (help-string "Copy selected text")
        (shortcut #\c)
        (callback
-        (λ _
-          (send page-text copy)))))
+        (λ _ (send page-text copy)))))
 
 (define (populate-right-click-menu)
   (send copy-menu-item enable #f)
@@ -320,17 +406,13 @@
        (label "Select &All")
        (help-string "Select all text in the page")
        (shortcut #\a)
-       (callback
-        (λ _
-          (send page-text select-all))))
+       (callback (λ _ (send page-text select-all))))
   (new separator-menu-item% (parent right-click-menu))
   (new menu-item% (parent right-click-menu)
        (label "&Save Page")
        (help-string "Save page to device")
        (shortcut #\s)
-       (callback
-        (λ _
-          (save-page page-text)))))
+       (callback (λ _ (save-page page-text)))))
 
 
 ;;; GUI starts here.

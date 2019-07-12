@@ -22,7 +22,7 @@
  ;; #f for default monospace.
  (font-name #f)
  (font-size 11)
- (title-size 23)
+ (title-size 19)
 
 
  ;; Bookmarks are in an S-expression format, as a list of lists.
@@ -47,7 +47,7 @@
  ;;   ("Tomato" "example.org/0/recipes/001.txt")))
 
  ;; Set the entire bookmarks value to #f to disable the bookmarks menu outright.
- 
+
  (bookmarks (("Veronica-2" "floodgap.com/1/v2")
              ("Bitreich" "bitreich.org")))
 

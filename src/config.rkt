@@ -1,5 +1,6 @@
 #lang racket/base
-(provide (except-out (all-defined-out)
+(provide (rename-out (bookmarks user-bookmarks))
+         (except-out (all-defined-out)
                      define-preference
                      define-colour))
 
@@ -25,6 +26,9 @@
   (define symbol
     (get-preference (quote symbol) (λ () default)
                     'timestamp config-file)))
+
+(define (save-preferences names vals)
+  (put-preferences names vals #f config-file))
 
 (define-preference homepage project-home)
 (define-preference download-folder #f)
