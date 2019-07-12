@@ -25,6 +25,33 @@
  (title-size 23)
 
 
+ ;; Bookmarks are in an S-expression format, as a list of lists.
+ ;; The format is (label link), any third item is ignored.
+ ;; Note: This isn't an association list: No '(foo . bar) format.
+
+ ;; A link with a separate label.
+ ;; ("Friend's phlog" "example.org/1/my-phlog")
+
+ ;; The link also serves as a label here.
+ ;; ("example.org")
+
+ ;; A separator.
+ ;; ()
+
+ ;; A dummy button (greyed-out), can be used for categorisation.
+ ;; "Favourite phlogs"
+
+ ;; A submenu with two items.
+ ;; ("Sandwich recipes"
+ ;;  (("Avocado" "example.org/0/sandwich.txt")
+ ;;   ("Tomato" "example.org/0/recipes/001.txt")))
+
+ ;; Set the entire bookmarks value to #f to disable the bookmarks menu outright.
+ 
+ (bookmarks (("Veronica-2" "floodgap.com/1/v2")
+             ("Bitreich" "bitreich.org")))
+
+
  ;; Colours are in RGB(A) format as a list of three bytes (or four, with alpha).
  ;; Besides bytes, strings of colour names are accepted as well.
  ;; To see a list of named colours, try:

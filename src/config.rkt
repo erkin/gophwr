@@ -16,6 +16,10 @@
 
 (define tls-enabled? (make-parameter #f))
 
+
+;;; Note: This code is for hard-coded *default* values.
+;;; Adjust the gophwr.rktd config file to override them.
+
 ;;; Preferences
 (define-syntax-rule (define-preference symbol default)
   (define symbol
@@ -24,6 +28,8 @@
 
 (define-preference homepage project-home)
 (define-preference download-folder #f)
+
+(define-preference bookmarks '(("Veronica-2" "floodgap.com/1/v2")))
 
 (define-preference wheel-step 3)
 (define-preference auto-wrap? #f)

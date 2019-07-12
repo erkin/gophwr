@@ -2,8 +2,8 @@
 (provide render-menu render-text
          initialise-styles change-style)
 
-(require racket/class
-         racket/gui/base
+(require racket/gui/base
+         racket/class
          racket/match)
 (require net/sendurl)
 (require "const.rkt"

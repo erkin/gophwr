@@ -1,8 +1,9 @@
 #lang racket/base
 (provide initialise-window go-to clear-page page-text)
 
-(require racket/class
-         racket/gui/base
+(require racket/gui/base
+         racket/class
+         racket/format
          racket/list
          racket/match
          racket/string)
@@ -195,23 +196,43 @@
 
 ;;;; Menubar
 (define (populate-menu-bar)
-  (let* ((menu-bar (new menu-bar% (parent frame)))
-         (file-menu (new menu% (parent menu-bar) (label "&File")))
-         (tools-menu (new menu% (parent menu-bar) (label "&Tools")))
-         (help-menu (new menu% (parent menu-bar) (label "&Help")))
-         (tls-toggle
-          (new checkable-menu-item% (parent tools-menu)
-               (label "Enable TL&S")
-               (help-string
-                "Exclusively use TLS when connecting to gopherholes")
-               (checked (tls-enabled?))
-               (callback (λ (item event)
-                           (tls-enabled? (send item is-checked?)))))))
-    ;; Grey out TLS toggle button if TLS is not available in the system.
-    (unless ssl-available?
-      (send tls-toggle enable #f))
+  ;; Traverse through the bookmark list (see config.rkt)
+  ;; and generate menu items out of them.
+  (define (populate-bookmarks menu items)
+    (unless (or (not (pair? items)) (null? items))
+      (let ((item (car items)))
+        (cond
+          ;; Item is not a list.
+          ;; Just a label. (Disabled menu item.)
+          ((not (list? item)) (send
+                               (new menu-item% (parent menu)
+                                    (label (~a item))
+                                    (callback void))
+                               enable #f))
+          ;; Item is an empty list.
+          ;; A separator.
+          ((null? item) (new separator-menu-item% (parent menu)))
+          ;; Item contains only one element.
+          ;; A link with no label. Link itself becomes the label.
+          ((null? (cdr item)) (new menu-item% (parent menu)
+                                   (label (~a (car item)))
+                                   (callback (λ _ (go-to (car item))))))
+          ;; Item contains a label and a list.
+          ;; A submenu to be parsed. (Same syntax.)
+          ((list? (cadr item)) (populate-bookmarks
+                                (new menu% (parent menu)
+                                     (label (~a (car item))))
+                                (cadr item)))
+          ;; Item contains a label and a link.
+          ;; A link with a label. (Duh!)
+          (else (new menu-item% (parent menu)
+                     (label (~a (car item)))
+                     (callback (λ _ (go-to (cadr item))))))))
+      (populate-bookmarks menu (cdr items))))
 
-    ;; File menu
+  (define menu-bar (new menu-bar% (parent frame)))
+
+  (let ((file-menu (new menu% (parent menu-bar) (label "&File"))))
     (new menu-item% (parent file-menu)
          (label "&Save Page")
          (help-string "Save page to device")
@@ -225,16 +246,25 @@
          (help-string "Exit gophwr")
          (shortcut #\q)
          (callback (λ _
-                     (quit))))
+                     (quit)))))
 
-    ;; Tools menu
+  (let ((tools-menu (new menu% (parent menu-bar) (label "&Tools"))))
     (new menu-item% (parent tools-menu)
          (label "&Find in Page")
          (help-string "Find a string in this page")
          (callback (λ _
                      (find-in-page page-text))))
+    ;; Grey out TLS toggle button if TLS is not available in the system.
+    (send (new checkable-menu-item% (parent tools-menu)
+               (label "Enable TL&S")
+               (help-string
+                "Exclusively use TLS when connecting to gopherholes")
+               (checked (tls-enabled?))
+               (callback (λ (item event)
+                           (tls-enabled? (send item is-checked?)))))
+          enable ssl-available?))
 
-    ;; Help menu
+  (let ((help-menu (new menu% (parent menu-bar) (label "&Help"))))
     (new menu-item% (parent help-menu)
          (label "gophwr Home")
          (help-string "Go to gophwr gopherhole (gophwrhole?)")
@@ -245,27 +275,32 @@
          (label "&About gophwr")
          (help-string "Show version and licence info")
          (callback (λ _
-                     (about))))
+                     (about)))))
 
-    (when (debug-mode?)
-      (let ((debug-menu (new menu% (parent menu-bar) (label "&Debug"))))
-        (new menu-item% (parent debug-menu)
-             (label "Collect &Garbage")
-             (shortcut #\g)
-             (callback (λ _
-                         (unless (send page-text in-edit-sequence?)
-                           (collect-garbage)))))
-        (new separator-menu-item% (parent debug-menu))
-        (new menu-item% (parent debug-menu)
-             (label "&Dump WXME")
-             (callback (λ _
-                         (unless (send page-text in-edit-sequence?)
-                           (send page-text save-file "" 'standard)))))
-        (new menu-item% (parent debug-menu)
-             (label "&Load WXME")
-             (callback (λ _
-                         (unless (send page-text in-edit-sequence?)
-                           (send page-text load-file "" 'standard)))))))))
+  (when bookmarks
+   (populate-bookmarks
+    (new menu% (parent menu-bar) (label "&Bookmarks"))
+    bookmarks))
+
+  (when (debug-mode?)
+    (let ((debug-menu (new menu% (parent menu-bar) (label "&Debug"))))
+      (new menu-item% (parent debug-menu)
+           (label "Collect &Garbage")
+           (shortcut #\g)
+           (callback (λ _
+                       (unless (send page-text in-edit-sequence?)
+                         (collect-garbage)))))
+      (new separator-menu-item% (parent debug-menu))
+      (new menu-item% (parent debug-menu)
+           (label "&Dump WXME")
+           (callback (λ _
+                       (unless (send page-text in-edit-sequence?)
+                         (send page-text save-file "" 'standard)))))
+      (new menu-item% (parent debug-menu)
+           (label "&Load WXME")
+           (callback (λ _
+                       (unless (send page-text in-edit-sequence?)
+                         (send page-text load-file "" 'standard))))))))
 
 
 ;;;; Right-click menu

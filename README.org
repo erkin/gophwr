@@ -27,10 +27,10 @@
     + Find in page
     + Configurable keyboard shortcuts
     + Mouseover/right-click links
+    + Bookmarks
 
 *** Up next
     + Options menu
-    + Bookmarks
     + Duplicate (=+=) types
     + Zooming
     + Caching
