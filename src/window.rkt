@@ -121,11 +121,10 @@
    (class text% (super-new)
      (inherit get-admin get-start-position get-end-position hide-caret)
      (define/override (on-default-event event)
-       (cond
-         ((send event button-down? 'right)
-          (let ((x (send event get-x)) (y (send event get-y)))
-            (send (get-admin) popup-menu right-click-menu x y)))
-         (else (super on-default-event event))))
+       (if (send event button-down? 'right)
+           (let ((x (send event get-x)) (y (send event get-y)))
+             (send (get-admin) popup-menu right-click-menu x y))
+           (super on-default-event event)))
      (define/augment (after-set-position)
        ;; Check if any text is selected.
        (let ((no-selection? (= (get-start-position)
@@ -248,6 +247,11 @@
          (callback (λ _
                      (quit)))))
 
+  (when bookmarks
+    (populate-bookmarks
+     (new menu% (parent menu-bar) (label "&Bookmarks"))
+     bookmarks))
+
   (let ((tools-menu (new menu% (parent menu-bar) (label "&Tools"))))
     (new menu-item% (parent tools-menu)
          (label "&Find in Page")
@@ -276,11 +280,6 @@
          (help-string "Show version and licence info")
          (callback (λ _
                      (about)))))
-
-  (when bookmarks
-   (populate-bookmarks
-    (new menu% (parent menu-bar) (label "&Bookmarks"))
-    bookmarks))
 
   (when (debug-mode?)
     (let ((debug-menu (new menu% (parent menu-bar) (label "&Debug"))))
