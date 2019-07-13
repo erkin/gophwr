@@ -12,6 +12,7 @@
          "const.rkt"
          "entry.rkt"
          "gopher.rkt"
+         "icon.rkt"
          "parser.rkt")
 
 
@@ -151,10 +152,23 @@
   (queue-callback exit #t))
 
 (define (about)
-  (message-box
-   (string-append "About " project-name)
-   version-message frame
-   '(ok no-icon)))
+  (define dialog
+    (new dialog% (parent frame)
+         (label (string-append "About " project-name))
+         (spacing 10)
+         (border 10)))
+  (define panel
+    (new horizontal-panel% (parent dialog)
+         (alignment '(center center))
+         (spacing 10)))
+  (new message% (parent panel)
+       (label huge-icon))
+  (new message% (parent panel)
+       (label version-message))
+  (new button% (parent dialog)
+       (label "OK")
+       (callback (λ _ (send dialog show #f))))
+  (send dialog show #t))
 
 (define (clear-page page)
   (send page erase))
@@ -255,11 +269,11 @@
                    (zero? (string-length
                            (send link-field get-value)))))))
 
-  (define pane
-    (new horizontal-pane% (parent dialog)))
+  (define panel
+    (new horizontal-panel% (parent dialog)))
 
   (define choice
-    (new radio-box% (parent pane)
+    (new radio-box% (parent panel)
         (label "")
         (choices '("Bookmark"
                    "Separator"
@@ -270,7 +284,7 @@
             (no-blank-bookmark)))))
 
   (define field-panel
-    (new vertical-panel% (parent pane)
+    (new vertical-panel% (parent panel)
          (alignment '(right center))
          (border 2)
          (spacing 3)))
@@ -439,9 +453,11 @@
   (populate-right-click-menu)
   (populate-menu-bar)
 
-  ;; Here we go!
-  (send frame create-status-line)
-  (send frame show #t))
+  (send* frame
+    (set-icon small-icon #f 'small)
+    (set-icon large-icon #f 'large)
+    (create-status-line)
+    (show #t)))
 
 
 ;;;; Auxiliary procedures

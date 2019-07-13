@@ -1,5 +1,7 @@
 * gophwr v0.5
-  A graphical gopher browser in =racket/gui=.
+  [[file:assets/icons/128x128.png]] A graphical gopher browser in =racket/gui=.
+
+  Icon courtesy of [[https://tildegit.org/tiwesdaeg][tiwesdaeg]].
 
 *** Project goals
     My aim is to create a decent gopher client suitable for daily use without
@@ -9,8 +11,8 @@
    This project is still a work in progress, expect occasional breakage.
    Patches and feedback welcome.
 
-**** The way it looks as of v0.5.2
-[[https://user-images.githubusercontent.com/591669/59290170-9da43e00-8c80-11e9-8f14-a700c2b2e56b.png]]
+**** The way it looks as of v0.5.8
+[[https://user-images.githubusercontent.com/591669/61175507-5976c700-a5b9-11e9-95a5-355026690474.png]]
 
 *** Features
     + Clickable links in colourful menus

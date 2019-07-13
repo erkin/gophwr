@@ -3,7 +3,7 @@
 
 
 (define project-name "gophwr")
-(define project-version "v0.5.7")
+(define project-version "v0.5.8")
 
 (define project-home "suika.erkin.party:70/1/gophwr")
 
@@ -14,8 +14,7 @@ Copyright (C) 2019 Erkin Batu Altunbaş
 
 Each file of this project's source code is subject 
 to the terms of the Mozilla Public Licence v2.0
-If a copy of the MPL was not distributed with this 
-file, you can obtain one at https://mozilla.org/MPL/2.0/
+https://mozilla.org/MPL/2.0/
 version
           project-name project-version))
 
