@@ -1,5 +1,7 @@
 * gophwr v0.5
-  [[file:assets/icons/128x128.png]] A graphical gopher browser in =racket/gui=.
+  A graphical gopher browser in =racket/gui=.
+
+  [[file:assets/icons/128x128.png]]
 
   Icon courtesy of [[https://tildegit.org/tiwesdaeg][tiwesdaeg]].
 
