@@ -125,6 +125,7 @@
      (inherit get-admin get-start-position get-end-position hide-caret)
      (define/override (on-default-event event)
        (if (send event button-down? 'right)
+           ;; TODO: Fix right-click glitch
            (let ((x (send event get-x)) (y (send event get-y)))
              (send (get-admin) popup-menu right-click-menu x y))
            (super on-default-event event)))
@@ -476,11 +477,14 @@
 
 ;;; Reset window state. Everything is fine now.
 (define (loaded)
-  (send* frame
-    (set-status-text "")
-    (set-label
-     (string-append project-name " \u2014 " address)) ; em-dash
-    (modified #f))
+  (send frame set-status-text "")
+  (send frame set-label
+        (let ((label (string-append project-name " \u2014 " address))) ; em-dash
+          ;; Truncate window label if it's longer than the hardcoded limit.
+          (if (> (string-length label) 200)
+              (string-append (substring label 0 199) "…")
+              label)))
+  (send frame modified #f)
   (send page-text set-position 0)
   (when (send page-text in-edit-sequence?)
     (send page-text end-edit-sequence))
