@@ -1,4 +1,6 @@
 (
+ ;;; Warning: Comments will get wiped next time settings are saved.
+
  ;; Homepage string. gopher:// URL scheme not necessary.
  ;; #f for blank page.
  (homepage "gopher.erkin.party:70/1/links")
@@ -65,9 +67,11 @@
  ;; (#o100 #o320 #o314)
  ;; (#b01000000 #b11010000 #b11001100)
 
+ ;; Used for canvas
  (fg-colour       (#xEE #xEE #xEE))
  (bg-colour       (#x11 #x11 #x11))
 
+ ;; Used for links
  (menu-colour     (#xAA #xAA #xEE))
  (link-colour     (#xAA #xEE #xAA))
  (error-colour    (#xEE #xAA #xAA))
@@ -76,6 +80,8 @@
  (image-colour    (#xEE #xAA #xEE))
  (clicked-colour  (#xAA #xAA #xAA))
 
+ ;; Used for address and search bars
  (address-bg-colour "white")
+ (address-success-colour "greenyellow")
  (address-error-colour "peachpuff")
 )

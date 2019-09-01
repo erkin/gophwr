@@ -55,6 +55,7 @@
              (make-object color% colour))))))
 
 (define-colour address-bg-colour "white")
+(define-colour address-success-colour "greenyellow")
 (define-colour address-error-colour "peachpuff")
 
 (define-colour fg-colour '(#xEE #xEE #xEE))
