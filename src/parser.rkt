@@ -53,18 +53,20 @@ For instance:
 
 (define/contract (parse-urn urn)
   ;; ("domain:port/type/path" "domain" port "type" "/path")
-  (-> string? (list/c string? string? exact-positive-integer? string? string?))
+  (-> string?
+      (struct/c gopher
+                string? string? integer? string? string?))
   (if-let (parsed-urn (regexp-match magic-regexp urn))
           (match-let (((list address domain port _ type path) parsed-urn))
-            (list address
-                  domain
-                  (if port
-                      ;; ":70" -> 70
-                      (string->number (substring port 1))
-                      ;; Fall back to 70 by default.
-                      70)
-                  (or type "1")
-                  (or path "/")))
+            (gopher address
+                    domain
+                    (if port
+                        ;; ":70" -> 70
+                        (string->number (substring port 1))
+                        ;; Fall back to 70 by default.
+                        70)
+                    (or type "1")
+                    (or path "/")))
           (raise-user-error
            (string-append "Failed to parse address: " urn))))
 

@@ -552,19 +552,18 @@
 
 (define (go-to uri #:history (history #f))
   (unless (send page-text in-edit-sequence?)
-    (match-let
-        (((list urn domain port type path)
-          ;; Strip out URL scheme from the address.
-          (parse-urn (string-trim
-                      (if (and (> (string-length uri) 8)
-                               (string=? (substring uri 0 9)
-                                         "gopher://"))
-                          (substring uri 9)
-                          uri) #:repeat? #t))))
+    (let ((url
+           ;; Strip out URL scheme from the address.
+           (parse-urn (string-trim
+                       (if (and (> (string-length uri) 8)
+                                (string=? (substring uri 0 9)
+                                          "gopher://"))
+                           (substring uri 9)
+                           uri) #:repeat? #t))))
       ;; Do nothing if the address is blank.
-      (when (non-empty-string? urn)
+      (when (non-empty-string? (gopher-urn url))
         ;; See: https://github.com/erkin/gophwr/wiki/Entity-types
-        (case type
+        (case (gopher-type url)
           ;; + type isn't meant to be called directly, so we'll assume
           ;; it's a text file for convenience.
           (("0" "1" "7" "H" "M" "c" "e" "h" "m" "w" "x" "+")
@@ -574,18 +573,18 @@
              (set! next-address '())
              (send forward-key enable #f)
              (send back-key enable #t))
-           (to-text urn domain port type path))
+           (to-text url))
           ;; 4 and 6 are actually text but we're treating them like
           ;; binary. Watch out for a stray '.' at the end!
           (("4" "5" "6" "9" "P" "d" "s" ";" "<")
-           (to-binary urn domain port type path))
+           (to-binary url))
           (("I" "g" "p" ":")
-           (to-image urn domain port type path))
+           (to-image url))
           (("2" "8" "T")
            (error-page "Session types not supported."))
           (else
            (error-page "Entity type not recognised: "
-                       (make-string type))))))))
+                       (make-string (gopher-type url)))))))))
 
 (define (update-address urn)
   (unless (string=? address urn)
@@ -597,46 +596,46 @@
               (not (string=? address (car previous-address))))
       (set! previous-address (cons address previous-address)))))
 
-(define (to-text urn domain port type path)
+(define (to-text url)
   (clear-page page-text)
-  (update-address urn)
+  (update-address (gopher-urn url))
   (load-stuff
-   urn
+   (gopher-urn url)
    (λ ()
-     ((if (member type '("1" "7"))
+     ((if (member (gopher-type url) '("1" "7"))
           render-menu
           render-text)
       page-text
-      (fetch-file domain port path #:type 'text)
+      (fetch-file url #:type 'text)
       go-to))))
 
-(define (to-binary urn domain port type path)
-  (loading urn)
+(define (to-binary url)
+  (loading (gopher-urn url))
   (load-stuff
-   urn
+   (gopher-urn url)
    (λ ()
      (when-let (filename (put-file "Choose a download location"
                                    frame
                                    download-folder
-                                   (last (string-split path "/"))))
+                                   (last (string-split (gopher-path url) "/"))))
                (write-file filename
-                           (fetch-file domain port path #:type 'binary)
+                           (fetch-file url #:type 'binary)
                            #:mode 'binary)))))
 
-(define (to-image urn domain port type path)
+(define (to-image url)
   (define (make-image-snip image-bytes type)
     (make-object image-snip%
                  (make-object bitmap%
                               (open-input-bytes image-bytes)
                               type bg-colour #t)))
   (clear-page page-text)
-  (update-address urn)
+  (update-address (gopher-urn url))
   (load-stuff
-   urn
+   (gopher-urn url)
    (λ ()
      (send page-text insert
-           (make-image-snip (fetch-file domain port path #:type 'binary)
-                            (case type
+           (make-image-snip (fetch-file url #:type 'binary)
+                            (case (gopher-type url)
                               (("I" ":") 'unknown/alpha)
                               (("g") 'gif/alpha)
                               (("p") 'png/alpha)))))))

@@ -6,15 +6,18 @@
          racket/port
          racket/tcp)
 (require openssl)
-(require "config.rkt")
+(require "const.rkt"
+         "config.rkt")
 
 
 ;;; \r\n is mandatory in Gopher.
 (define (write-line str out)
   (display (string-append str "\r\n") out))
 
-(define/contract (fetch-file host port path #:type type)
-  (-> string? exact-positive-integer? string? #:type symbol?
+(define/contract (fetch-file url #:type type)
+  (-> (struct/c gopher
+                string? string? integer? string? string?)
+      #:type symbol?
       (or/c (listof string?) bytes?))
   ;; Try to connect with TLS if it's enabled.
   (let-values (((in out)
@@ -22,17 +25,17 @@
                 ;; TLS handshake fails.
                 (cond
                   ;; https://github.com/erkin/gophwr/wiki/TLS#100k-convention
-                  ((> port 100000)
+                  ((> (gopher-port url) 100000)
                    (if ssl-available?
-                       (ssl-connect/enable-break host (- port 100000))
+                       (ssl-connect/enable-break (gopher-domain url) (- (gopher-port url) 100000))
                        (raise-user-error
                         "This gopherhole requires TLS to connect.")))
                   ((tls-enabled?)
-                   (ssl-connect/enable-break host port))
+                   (ssl-connect/enable-break (gopher-domain url) (gopher-port url)))
                   (else
-                   (tcp-connect/enable-break host port)))))
+                   (tcp-connect/enable-break (gopher-domain url) (gopher-port url))))))
     ;; Request the desired file.
-    (write-line path out)
+    (write-line (gopher-path url) out)
     ;; Output port mustn't be closed before the input is completely read.
     ;; tcp-abandon-port doesn't send a close message until the input port
     ;; is closed as well.

@@ -25,3 +25,5 @@ version
 (define-syntax-rule (when-let (value condition) . body)
   (let ((value condition))
     (when value . body)))
+
+(struct gopher (urn domain port type path))
