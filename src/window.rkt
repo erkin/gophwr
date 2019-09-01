@@ -38,6 +38,8 @@
          (cond
            ((eq? key-code 'f5)
             (refresh))
+           ((eq? key-code 'escape)
+            (send search-panel show #f))
            ((and meta? (eq? key-code 'left))
             (go-back))
            ((and meta? (eq? key-code 'right))
@@ -48,7 +50,7 @@
             (send address-field focus)
             (send (send address-field get-editor) select-all))
            ((and ctrl? (eq? key-code #\f))
-            (find-in-page page-text))
+            (show-search-field))
            ;; Return #f if we don't recognise this key code so that it can be
            ;; delegated to lower levels in on-subwindow-char (such as the
            ;; canvas or the text).
@@ -106,7 +108,7 @@
        (callback (λ (f event)
                    (when (equal? (send event get-event-type)
                                  'text-field-enter)
-                     (go-to (send f get-value)))))))
+                     (go))))))
 
 (define address-button
   (new button% (parent address-pane)
@@ -143,9 +145,30 @@
   (new editor-canvas% (parent frame)
        (style '(no-focus auto-hscroll auto-vscroll))
        (editor page-text)
-       (wheel-step wheel-step)
-       (stretchable-width #t)
-       (stretchable-height #t)))
+       (wheel-step wheel-step)))
+
+(define search-panel
+  (new horizontal-panel% (parent frame)
+       (alignment '(left bottom))
+       (stretchable-height #f)))
+
+(define search-field
+  (new text-field% (parent search-panel)
+       (label "Search")
+       (min-width 300)
+       (stretchable-width #f)
+       (callback
+        (λ (item event)
+          (when (eq? 'text-field (send event get-event-type))
+            (find-in-page page-text))))))
+
+(define case-sensitive-tickbox
+  (new check-box% (parent search-panel)
+       (label "Match Case")
+       (callback
+        (λ (item event)
+          (when (eq? 'check-box (send event get-event-type))
+            (find-in-page page-text))))))
 
 ;;;; General procedures
 (define (quit)
@@ -180,34 +203,30 @@
 (define (highlight-positions page positions len)
   ;; Hilite and scroll to the first position.
   (send page set-position-bias-scroll 'start
-        (car positions) (+ (car positions) len) #f #t 'local)
-  (for-each (λ (pos)
-              ;; A silly little trick until I figure out a way to do
-              ;; persistent highlighting.
-              (sleep/yield 0.2)
-              (send page flash-on pos (+ pos len) #f #t 200))
-            (cdr positions)))
+        (car positions) (+ (car positions) len) #f #t 'local))
+
+(define (show-search-field)
+  (send search-panel show #t)
+  (send search-field focus)
+  (send (send search-field get-editor) select-all))
 
 (define (find-in-page page)
   (clear-selection page)
   (unless (send page in-edit-sequence?)
     (let ((search-string
-           (get-text-from-user "Find" "Find string in page" frame)))
+           (send search-field get-value)))
       ;; Do nothing if the user clicks cancel.
-      (when (non-empty-string? search-string)
-        (let ((search-results (send page find-string-all search-string
-                                    'forward 'start 'eof #t #f)))
-          (if (pair? search-results)
-              (highlight-positions page search-results
-                                   (string-length search-string))
-              ;; Break the bad news to the user.
-              ;; Return void because we don't care about the result.
-              (void
-               (message-box
-                "Not found"
-                (string-append "\"" search-string "\""
-                               " not found in current page.")
-                frame '(ok caution)))))))))
+      (if (non-empty-string? search-string)
+          (let ((search-results (send page find-string-all search-string
+                                      'forward 'start 'eof #t
+                                      (send case-sensitive-tickbox get-value))))
+            (if (pair? search-results)
+                (begin
+                  (send search-field set-field-background address-success-colour)
+                  (highlight-positions page search-results
+                                       (string-length search-string)))
+                (send search-field set-field-background address-error-colour)))
+          (send search-field set-field-background address-bg-colour)))))
 
 ;; Traverse through the bookmark list (see config.rkt)
 ;; and generate menu items out of them.
@@ -361,7 +380,7 @@
     (new menu-item% (parent tools-menu)
          (label "&Find in Page")
          (help-string "Find a string in this page")
-         (callback (λ _ (find-in-page page-text))))
+         (callback (λ _ (show-search-field))))
     ;; Grey out TLS toggle button if TLS is not available in the system.
     (send (new checkable-menu-item% (parent tools-menu)
                (label "Enable TL&S")
@@ -453,6 +472,8 @@
   (initialise-styles (send page-text get-style-list))
   (populate-right-click-menu)
   (populate-menu-bar)
+
+  (send search-panel show #f)
 
   (send* frame
     (set-icon small-icon #f 'small)

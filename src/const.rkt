@@ -3,7 +3,7 @@
 
 
 (define project-name "gophwr")
-(define project-version "v0.5.8")
+(define project-version "v0.5.9")
 
 (define project-home "suika.erkin.party:70/1/gophwr")
 
