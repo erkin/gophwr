@@ -571,16 +571,18 @@
 (define (go)
   (go-to (send address-field get-value)))
 
-(define (go-to uri #:history (history #f))
+(define (go-to destination-address #:history (history #f))
   (unless (send page-text in-edit-sequence?)
-    (let ((url
-           ;; Strip out URL scheme from the address.
-           (parse-urn (string-trim
-                       (if (and (> (string-length uri) 8)
-                                (string=? (substring uri 0 9)
-                                          "gopher://"))
-                           (substring uri 9)
-                           uri) #:repeat? #t))))
+    (let* ((uri (string-downcase destination-address))
+           (url
+            (parse-urn
+             ;; Strip out URL scheme from the address.
+             (string-trim
+              (if (and (> (string-length uri) 8)
+                       (string=? (substring uri 0 9)
+                                 "gopher://"))
+                  (substring uri 9)
+                  uri) #:repeat? #t))))
       ;; Do nothing if the address is blank.
       (when (non-empty-string? (gopher-urn url))
         ;; See: https://github.com/erkin/gophwr/wiki/Entity-types
