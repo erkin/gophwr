@@ -620,17 +620,36 @@
       (set! previous-address (cons address previous-address)))))
 
 (define (to-text url)
+  ;; Parse redirections according to Sean Conner's suggestion.
+  ;; See: <http://boston.conman.org/2019/09/30.4>
+  (define (redirect-target lines)
+    (and (> (length lines) 0)
+         (with-handlers ([exn:fail? (lambda (exn) #f)])
+           (match-let (((list type text path domain port)
+                        (parse-selector (car lines))))
+             (and (string=? type "3")
+                  (string=? text "Permanent redirect")
+                  (gopher (string-append domain ":" port "/1/" path)
+                          domain
+                          (string->number port)
+                          "1"
+                          path))))))
   (clear-page page-text)
   (update-address (gopher-urn url))
   (load-stuff
    (gopher-urn url)
    (λ ()
-     ((if (member (gopher-type url) '("1" "7"))
-          render-menu
-          render-text)
-      page-text
-      (fetch-file url #:type 'text)
-      go-to))))
+     (let resolve ((response (fetch-file url #:type 'text)))
+       (if-let (target (redirect-target response))
+               (begin
+                 (update-address (gopher-urn target))
+                 (resolve (fetch-file target #:type 'text)))
+               ((if (member (gopher-type url) '("1" "7"))
+                    render-menu
+                    render-text)
+                page-text
+                response
+                go-to))))))
 
 (define (to-binary url)
   (loading (gopher-urn url))
